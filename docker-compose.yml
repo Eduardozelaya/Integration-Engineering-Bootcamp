@@ -1,0 +1,28 @@
+services:
+  mq:
+    image: icr.io/ibm-messaging/mq:latest
+    container_name: qm1
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: ${MQ_QMGR_NAME:-QM1}
+      MQ_ADMIN_PASSWORD: ${MQ_ADMIN_PASSWORD}
+      MQ_APP_PASSWORD: ${MQ_APP_PASSWORD}
+    ports:
+      - "1414:1414"
+      - "9443:9443"
+    mem_limit: 1g
+    volumes:
+      - mqdata:/mnt/mqm
+
+  mock:
+    image: wiremock/wiremock:latest
+    container_name: mock
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "8080:8080"
+    mem_limit: 256m
+    volumes:
+      - ./mock:/home/wiremock
+
+volumes:
+  mqdata:

@@ -1,0 +1,10 @@
+.env
+*.bar
+target/
+*.log
+*.p12
+*.jks
+*.key
+*.pem
+datapower/config/*
+datapower/local/*
