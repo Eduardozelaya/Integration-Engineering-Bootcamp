@@ -1,0 +1,16 @@
+CREATE COMPUTE MODULE PassThrough_Compute
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+    SET OutputRoot = InputRoot;
+
+    IF COALESCE(InputRoot.JSON.Data.forcarErro, '') = 'true' THEN
+      THROW USER EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951
+            VALUES('Falha proposital para testar backout');
+    END IF;
+
+    SET OutputRoot.JSON.Data.processedBy = 'ACE-LAB';
+    SET OutputRoot.JSON.Data.processedAt =
+        CAST(CURRENT_GMTTIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SSSZZZ');
+    RETURN TRUE;
+  END;
+END MODULE;

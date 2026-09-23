@@ -1,0 +1,44 @@
+CREATE COMPUTE MODULE PassThrough_TratarFalha
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+    DECLARE tentativa INTEGER InputRoot.MQMD.BackoutCount;
+
+    -- Ainda há tentativas: relança para provocar rollback e retentativa
+    IF tentativa < 2 THEN
+      THROW USER EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951
+            VALUES('Retentativa ' || CAST(tentativa + 1 AS CHARACTER) || ' de 3');
+    END IF;
+
+    -- Última tentativa: extrai o erro mais interno do ExceptionList
+    DECLARE ex REFERENCE TO InputExceptionList.*[1];
+    DECLARE codigo INTEGER;
+    DECLARE texto CHARACTER;
+    DECLARE detalhe CHARACTER;
+
+    WHILE LASTMOVE(ex) DO
+      IF ex.Number IS NOT NULL THEN
+        SET codigo = ex.Number;
+        SET texto  = ex.Text;
+        IF EXISTS(ex.Insert[]) THEN
+          SET detalhe = ex.Insert[<].Text;
+        END IF;
+      END IF;
+      MOVE ex LASTCHILD;
+    END WHILE;
+
+    -- Envelope para a DLQ: original intacto + motivo estruturado
+    SET OutputRoot.Properties = InputRoot.Properties;
+    SET OutputRoot.MQMD       = InputRoot.MQMD;
+
+    SET OutputRoot.JSON.Data.original = InputRoot.JSON.Data;
+    SET OutputRoot.JSON.Data.erro.codigo     = codigo;
+    SET OutputRoot.JSON.Data.erro.mensagem   = texto;
+    SET OutputRoot.JSON.Data.erro.detalhe    = detalhe;
+    SET OutputRoot.JSON.Data.erro.tentativas = tentativa + 1;
+    SET OutputRoot.JSON.Data.erro.flow       = 'PassThrough';
+    SET OutputRoot.JSON.Data.erro.falhouEm   =
+        CAST(CURRENT_GMTTIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SSSZZZ');
+
+    RETURN TRUE;
+  END;
+END MODULE;
