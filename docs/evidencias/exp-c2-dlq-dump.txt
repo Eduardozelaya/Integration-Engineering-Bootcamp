@@ -1,0 +1,70 @@
+
+AMQSBCG0 - starts here
+**********************
+ 
+ MQOPEN - 'APP.DLQ'
+ 
+ 
+ MQGET of message number 1, CompCode:0 Reason:0
+****Message descriptor****
+
+  StrucId  : 'MD  '  Version : 2
+  Report   : 0  MsgType : 8
+  Expiry   : -1  Feedback : 0
+  Encoding : 546  CodedCharSetId : 1208
+  Format : 'MQSTR   '
+  Priority : 0  Persistence : 1
+  MsgId : X'414D5120514D31202020202020202020423CB36A07300040'
+  CorrelId : X'000000000000000000000000000000000000000000000000'
+  BackoutCount : 0
+  ReplyToQ       : '                                                '
+  ReplyToQMgr    : 'QM1                                             '
+  ** Identity Context
+  UserIdentifier : 'mqm         '
+  AccountingToken : 
+   X'0431303031000000000000000000000000000000000000000000000000000006'
+  ApplIdentityData : '                                '
+  ** Origin Context
+  PutApplType    : '6'
+  PutApplName    : 'amqsput                     '
+  PutDate  : '20260923'    PutTime  : '03245799'
+  ApplOriginData : '    '
+
+  GroupId : X'000000000000000000000000000000000000000000000000'
+  MsgSeqNumber   : '1'
+  Offset         : '0'
+  MsgFlags       : '0'
+  OriginalLength : '-1'
+ 
+****   Message      ****
+ 
+ length - 238 of 238 bytes
+ 
+00000000:  7B22 6F72 6967 696E 616C 223A 7B22 6F72           '{"original":{"or'
+00000010:  6465 7249 6422 3A22 3230 222C 2266 6F72           'derId":"20","for'
+00000020:  6361 7245 7272 6F22 3A22 7472 7565 227D           'carErro":"true"}'
+00000030:  2C22 6572 726F 223A 7B22 636F 6469 676F           ',"erro":{"codigo'
+00000040:  223A 3239 3531 2C22 6D65 6E73 6167 656D           '":2951,"mensagem'
+00000050:  223A 2255 7365 7220 6765 6E65 7261 7465           '":"User generate'
+00000060:  6420 6578 6365 7074 696F 6E22 2C22 6465           'd exception","de'
+00000070:  7461 6C68 6522 3A22 4661 6C68 6120 7072           'talhe":"Falha pr'
+00000080:  6F70 6F73 6974 616C 2070 6172 6120 7465           'oposital para te'
+00000090:  7374 6172 2062 6163 6B6F 7574 222C 2274           'star backout","t'
+000000A0:  656E 7461 7469 7661 7322 3A33 2C22 666C           'entativas":3,"fl'
+000000B0:  6F77 223A 2250 6173 7354 6872 6F75 6768           'ow":"PassThrough'
+000000C0:  222C 2266 616C 686F 7545 6D22 3A22 3230           '","falhouEm":"20'
+000000D0:  3236 2D30 392D 3233 5430 333A 3235 3A30           '26-09-23T03:25:0'
+000000E0:  302E 3031 382B 3030 3A30 3022 7D7D                '0.018+00:00"}}  '
+ 
+ 
+ 
+ No more messages 
+
+****   Summary      ****
+ 1 messages browsed.
+ Smallest message 238 bytes.
+ Largest message 238 bytes.
+ Average message 238 bytes.
+
+ MQCLOSE
+ MQDISC
