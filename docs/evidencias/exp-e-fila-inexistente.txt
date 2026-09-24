@@ -1,0 +1,9 @@
+5724-H72 (C) Copyright IBM Corp. 1994, 2026.
+Starting MQSC for queue manager QM1.
+
+
+     1 : DISPLAY QLOCAL(APP.NAOEXISTE)
+AMQ8147E: IBM MQ object APP.NAOEXISTE not found.
+One MQSC command read.
+No commands have a syntax error.
+One valid MQSC command could not be processed.

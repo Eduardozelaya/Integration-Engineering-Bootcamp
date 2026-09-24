@@ -1,0 +1,13 @@
+diff --git a/ace/apps/OrderProcessing/PassThrough.msgflow b/ace/apps/OrderProcessing/PassThrough.msgflow
+index b6dbc89..30a8c73 100644
+--- a/ace/apps/OrderProcessing/PassThrough.msgflow
++++ b/ace/apps/OrderProcessing/PassThrough.msgflow
+@@ -18,7 +18,7 @@
+       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="373,197" computeExpression="esql://routine/#PassThrough_TratarFalha.Main">
+         <translation xmi:type="utility:ConstantString" string="TratarFalha"/>
+       </nodes>
+-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="612,210" queueName="APP.DLQ" policyUrl="{R2Policies}:MQ_LOCAL">
++      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="612,210" queueName="APP.NAOEXISTE" policyUrl="{R2Policies}:MQ_LOCAL">
+         <translation xmi:type="utility:ConstantString" string="GravarDLQ"/>
+       </nodes>
+       <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="199,242" destination="file" filePath="C:\temp\catch-trace.txt" pattern="${CURRENT_GMTTIMESTAMP} BOC=${Root.MQMD.BackoutCount} orderId=${Root.JSON.Data.orderId}">

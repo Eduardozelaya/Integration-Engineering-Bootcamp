@@ -1,0 +1,58 @@
+
+AMQSBCG0 - starts here
+**********************
+ 
+ MQOPEN - 'APP.BACKOUT'
+ 
+ 
+ MQGET of message number 1, CompCode:0 Reason:0
+****Message descriptor****
+
+  StrucId  : 'MD  '  Version : 2
+  Report   : 0  MsgType : 8
+  Expiry   : -1  Feedback : 0
+  Encoding : 546  CodedCharSetId : 1208
+  Format : 'MQSTR   '
+  Priority : 0  Persistence : 1
+  MsgId : X'414D5120514D31202020202020202020C789B46A07300040'
+  CorrelId : X'000000000000000000000000000000000000000000000000'
+  BackoutCount : 0
+  ReplyToQ       : '                                                '
+  ReplyToQMgr    : 'QM1                                             '
+  ** Identity Context
+  UserIdentifier : 'mqm         '
+  AccountingToken : 
+   X'0431303031000000000000000000000000000000000000000000000000000006'
+  ApplIdentityData : '                                '
+  ** Origin Context
+  PutApplType    : '6'
+  PutApplName    : 'amqsput                     '
+  PutDate  : '20260924'    PutTime  : '02505484'
+  ApplOriginData : '    '
+
+  GroupId : X'000000000000000000000000000000000000000000000000'
+  MsgSeqNumber   : '1'
+  Offset         : '0'
+  MsgFlags       : '0'
+  OriginalLength : '-1'
+ 
+****   Message      ****
+ 
+ length - 36 of 36 bytes
+ 
+00000000:  7B22 6F72 6465 7249 6422 3A22 3233 222C           '{"orderId":"23",'
+00000010:  2266 6F72 6361 7245 7272 6F22 3A22 7472           '"forcarErro":"tr'
+00000020:  7565 227D                                         'ue"}            '
+ 
+ 
+ 
+ No more messages 
+
+****   Summary      ****
+ 1 messages browsed.
+ Smallest message 36 bytes.
+ Largest message 36 bytes.
+ Average message 36 bytes.
+
+ MQCLOSE
+ MQDISC

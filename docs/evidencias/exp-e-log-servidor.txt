@@ -1,0 +1,18 @@
+# Exp E - log de eventos | fonte: integration_server.TEST_SERVER1.events.txt | CP1252->UTF-8 | UTC
+2026-09-24 02:50:54.839140Z: [Thread 10728] (Msg 1/4) BIP2232E: Erro detectado ao manipular um erro anterior no nó 'PassThrough.TratarFalha'. 
+2026-09-24 02:50:54.841992Z: [Thread 10728] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.ProcessarPedido'. 
+2026-09-24 02:50:54.844612Z: [Thread 10728] (Msg 3/4) BIP2488E:  (.PassThrough_Compute.Main, 6.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Falha proposital para testar backout');'. 
+2026-09-24 02:50:54.851896Z: [Thread 10728] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Falha proposital para testar backout' 'PassThrough.ProcessarPedido' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}' 
+2026-09-24 02:50:54.863044Z: [Thread 10728] (Msg 1/4) BIP2628W: Condição de exceção detectada no nó de entrada 'PassThrough.LerPedido'. 
+2026-09-24 02:50:54.868232Z: [Thread 10728] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.TratarFalha'. 
+2026-09-24 02:50:54.872996Z: [Thread 10728] (Msg 3/4) BIP2488E:  (.PassThrough_TratarFalha.Main, 7.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Retentativa ' || CAST(tentativa + 1 AS CHARACTER) || ' de 3');'. 
+2026-09-24 02:50:54.883764Z: [Thread 10728] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Retentativa 1 de 3' 'PassThrough.TratarFalha' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}' 
+2026-09-24 02:50:55.857188Z: [Thread 10728] (Msg 1/4) BIP2232E: Erro detectado ao manipular um erro anterior no nó 'PassThrough.TratarFalha'. 
+2026-09-24 02:50:55.867724Z: [Thread 10728] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.ProcessarPedido'. 
+2026-09-24 02:50:55.874376Z: [Thread 10728] (Msg 3/4) BIP2488E:  (.PassThrough_Compute.Main, 6.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Falha proposital para testar backout');'. 
+2026-09-24 02:50:55.885352Z: [Thread 10728] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Falha proposital para testar backout' 'PassThrough.ProcessarPedido' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}' 
+2026-09-24 02:50:56.864712Z: [Thread 10728] (Msg 1/4) BIP2232E: Erro detectado ao manipular um erro anterior no nó 'PassThrough.GravarDLQ'. 
+2026-09-24 02:50:56.873084Z: [Thread 10728] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.ProcessarPedido'. 
+2026-09-24 02:50:56.877372Z: [Thread 10728] (Msg 3/4) BIP2488E:  (.PassThrough_Compute.Main, 6.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Falha proposital para testar backout');'. 
+2026-09-24 02:50:56.882128Z: [Thread 10728] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Falha proposital para testar backout' 'PassThrough.ProcessarPedido' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}' 
+2026-09-24 02:50:57.869012Z: [Thread 10728] (Msg 1/1) BIP2648E: Mensagem restaurada para uma fila: nó do fluxo de mensagens 'PassThrough.LerPedido'. 
