@@ -1,0 +1,12 @@
+2026-09-23 00:32:27.046852: BIP2269I: Recurso implementado 'PassThrough' (uuid='PassThrough',tipo='MessageFlow') iniciado com Ûxito.
+2026-09-23 00:32:27.054942: BIP9332I: Application 'OrderProcessing' foi changed com Ûxito.
+2026-09-23 00:32:27.060294: BIP9326I: A origem 'OrderProcessing.bar' foi implementada com Ûxito.
+2026-09-23 00:32:27.067170: BIP2154I: O servidor de integraþÒo foi concluÝdo com a Mensagem de configuraþÒo.
+2026-09-23 00:34:34.613304: BIP2232E: Erro detectado ao manipular um erro anterior no n¾ 'PassThrough.TratarFalha'.
+2026-09-23 00:34:34.619980: BIP2230E: Foi detectado um erro ao processar uma mensagem no n¾ 'PassThrough.ProcessarPedido'.
+2026-09-23 00:34:34.625888: BIP2488E:  (.PassThrough_Compute.Main, 6.7) Detectado erro ao executar a instruþÒo SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Falha proposital para testar backout');'.
+2026-09-23 00:34:34.638252: BIP2951I: Evento gerado pelo c¾digo do usußrio. Informaþ§es adicionais : 'Falha proposital para testar backout' 'PassThrough.ProcessarPedido' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}'
+2026-09-23 00:34:34.650672: BIP2628W: CondiþÒo de exceþÒo detectada no n¾ de entrada 'PassThrough.LerPedido'.
+2026-09-23 00:34:34.656608: BIP2230E: Foi detectado um erro ao processar uma mensagem no n¾ 'PassThrough.TratarFalha'.
+2026-09-23 00:34:34.663248: BIP2488E:  (.PassThrough_TratarFalha.Main, 7.7) Detectado erro ao executar a instruþÒo SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Retentativa ' || CAST(tentativa + 1 AS CHARACTER) || ' de 3');'.
+2026-09-23 00:34:34.676040: BIP2951I: Evento gerado pelo c¾digo do usußrio. Informaþ§es adicionais : 'Retentativa 1 de 3' 'PassThrough.TratarFalha' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}'

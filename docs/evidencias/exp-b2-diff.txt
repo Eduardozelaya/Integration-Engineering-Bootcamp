@@ -1,0 +1,13 @@
+diff --git a/ace/apps/OrderProcessing/PassThrough.msgflow b/ace/apps/OrderProcessing/PassThrough.msgflow
+index b6dbc89..f0d954d 100644
+--- a/ace/apps/OrderProcessing/PassThrough.msgflow
++++ b/ace/apps/OrderProcessing/PassThrough.msgflow
+@@ -6,7 +6,7 @@
+     <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/OrderProcessing/icons/full/obj16/PassThrough.gif"/>
+     <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/OrderProcessing/icons/full/obj30/PassThrough.gif"/>
+     <composition>
+-      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="21,114" queueName="APP.IN" messageDomainProperty="JSON" policyUrl="{R2Policies}:MQ_LOCAL">
++      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="21,114" queueName="APP.IN" messageDomainProperty="JSON" transactionMode="no" policyUrl="{R2Policies}:MQ_LOCAL">
+         <translation xmi:type="utility:ConstantString" string="LerPedido"/>
+       </nodes>
+       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="288,122" computeExpression="esql://routine/#PassThrough_Compute.Main">
