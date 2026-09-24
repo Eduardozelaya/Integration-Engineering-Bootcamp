@@ -1,12 +1,26 @@
-2026-09-23 00:32:27.046852: BIP2269I: Recurso implementado 'PassThrough' (uuid='PassThrough',tipo='MessageFlow') iniciado com Ûxito.
-2026-09-23 00:32:27.054942: BIP9332I: Application 'OrderProcessing' foi changed com Ûxito.
-2026-09-23 00:32:27.060294: BIP9326I: A origem 'OrderProcessing.bar' foi implementada com Ûxito.
-2026-09-23 00:32:27.067170: BIP2154I: O servidor de integraþÒo foi concluÝdo com a Mensagem de configuraþÒo.
-2026-09-23 00:34:34.613304: BIP2232E: Erro detectado ao manipular um erro anterior no n¾ 'PassThrough.TratarFalha'.
-2026-09-23 00:34:34.619980: BIP2230E: Foi detectado um erro ao processar uma mensagem no n¾ 'PassThrough.ProcessarPedido'.
-2026-09-23 00:34:34.625888: BIP2488E:  (.PassThrough_Compute.Main, 6.7) Detectado erro ao executar a instruþÒo SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Falha proposital para testar backout');'.
-2026-09-23 00:34:34.638252: BIP2951I: Evento gerado pelo c¾digo do usußrio. Informaþ§es adicionais : 'Falha proposital para testar backout' 'PassThrough.ProcessarPedido' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}'
-2026-09-23 00:34:34.650672: BIP2628W: CondiþÒo de exceþÒo detectada no n¾ de entrada 'PassThrough.LerPedido'.
-2026-09-23 00:34:34.656608: BIP2230E: Foi detectado um erro ao processar uma mensagem no n¾ 'PassThrough.TratarFalha'.
-2026-09-23 00:34:34.663248: BIP2488E:  (.PassThrough_TratarFalha.Main, 7.7) Detectado erro ao executar a instruþÒo SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Retentativa ' || CAST(tentativa + 1 AS CHARACTER) || ' de 3');'.
-2026-09-23 00:34:34.676040: BIP2951I: Evento gerado pelo c¾digo do usußrio. Informaþ§es adicionais : 'Retentativa 1 de 3' 'PassThrough.TratarFalha' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}'
+# Exp B2 - log de eventos do servidor | fonte: integration_server.TEST_SERVER1.events.txt.1, linhas 67-90
+# convertido CP1252 -> UTF-8 | horarios em UTC | 03:32:27 deploy No, 03:34:34 orderId 21, 03:39:10 reversao
+2026-09-23 03:32:24.306292Z: [Thread 11836] (Msg 1/1) BIP2155I: Prestes a executar 'Stop' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
+2026-09-23 03:32:26.863168Z: [Thread 11836] (Msg 1/1) BIP2271I: Recurso implementado 'PassThrough' (uuid='PassThrough',tipo='MessageFlow') interrompido com êxito. 
+2026-09-23 03:32:26.879260Z: [Thread 11836] (Msg 1/1) BIP2155I: Prestes a executar 'TearDown' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
+2026-09-23 03:32:26.975872Z: [Thread 11836] (Msg 1/1) BIP2155I: Prestes a executar 'Initialize' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
+2026-09-23 03:32:27.039648Z: [Thread 11836] (Msg 1/1) BIP2155I: Prestes a executar 'Start' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
+2026-09-23 03:32:27.046852Z: [Thread 11836] (Msg 1/1) BIP2269I: Recurso implementado 'PassThrough' (uuid='PassThrough',tipo='MessageFlow') iniciado com êxito. 
+2026-09-23 03:32:27.054942Z: [Thread 11836] (Msg 1/1) BIP9332I: Application 'OrderProcessing' foi changed com êxito. 
+2026-09-23 03:32:27.060294Z: [Thread 11836] (Msg 1/1) BIP9326I: A origem 'OrderProcessing.bar' foi implementada com êxito. 
+2026-09-23 03:32:27.067170Z: [Thread 11836] (Msg 1/1) BIP2154I: O servidor de integração foi concluído com a Mensagem de configuração. 
+2026-09-23 03:34:34.613304Z: [Thread 26284] (Msg 1/4) BIP2232E: Erro detectado ao manipular um erro anterior no nó 'PassThrough.TratarFalha'. 
+2026-09-23 03:34:34.619980Z: [Thread 26284] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.ProcessarPedido'. 
+2026-09-23 03:34:34.625888Z: [Thread 26284] (Msg 3/4) BIP2488E:  (.PassThrough_Compute.Main, 6.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Falha proposital para testar backout');'. 
+2026-09-23 03:34:34.638252Z: [Thread 26284] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Falha proposital para testar backout' 'PassThrough.ProcessarPedido' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}' 
+2026-09-23 03:34:34.650672Z: [Thread 26284] (Msg 1/4) BIP2628W: Condição de exceção detectada no nó de entrada 'PassThrough.LerPedido'. 
+2026-09-23 03:34:34.656608Z: [Thread 26284] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.TratarFalha'. 
+2026-09-23 03:34:34.663248Z: [Thread 26284] (Msg 3/4) BIP2488E:  (.PassThrough_TratarFalha.Main, 7.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Retentativa ' || CAST(tentativa + 1 AS CHARACTER) || ' de 3');'. 
+2026-09-23 03:34:34.676040Z: [Thread 26284] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Retentativa 1 de 3' 'PassThrough.TratarFalha' '{2}' '{3}' '{4}' '{5}' '{6}' '{7}' '{8}' '{9}' 
+2026-09-23 03:39:10.158496Z: [Thread 17640] (Msg 1/1) BIP2152I: Mensagem de configuração recebida. 
+2026-09-23 03:39:10.203257Z: [Thread 17640] (Msg 1/1) BIP9339W: Os valores definidos nas políticas 'MQ_LOCAL' no projeto de política 'R2Policies' correspondem aos valores das políticas existentes. Os recursos implementados usando as políticas não serão afetados pela reimplementação do projeto de política. 
+2026-09-23 03:39:10.219681Z: [Thread 17640] (Msg 1/1) BIP2155I: Prestes a executar 'Stop' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
+2026-09-23 03:39:12.752730Z: [Thread 17640] (Msg 1/1) BIP2271I: Recurso implementado 'PassThrough' (uuid='PassThrough',tipo='MessageFlow') interrompido com êxito. 
+2026-09-23 03:39:12.762736Z: [Thread 17640] (Msg 1/1) BIP2155I: Prestes a executar 'TearDown' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
+2026-09-23 03:39:12.878406Z: [Thread 17640] (Msg 1/1) BIP2155I: Prestes a executar 'Initialize' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
+2026-09-23 03:39:13.004344Z: [Thread 17640] (Msg 1/1) BIP2155I: Prestes a executar 'Start' no recurso implementado 'OrderProcessing' do tipo 'Application'. 
