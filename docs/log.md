@@ -9,3 +9,5 @@
 - Entregue: sim. Incremento provado por efeito (janela de retenção), não por leitura de BOC — ver achado no doc
 - Travou: `duplicate entry` no `ibmint package` (~40 min). Causa: `run/` do TEST_SERVER1 dentro do workspace
 - Commits: 5264042 (evidências), 8c97617 (documentação)
+23/09 — DoD: caminho feliz ok; B2 commitado; Exp E com 4 evidências e diff vazio após reverter; ESTADO.md atualizado.
+23/09 — ~3h — DoD: caminho feliz pos-reversao; B2 commitado; Exp E com 4 evidencias e diff vazio apos reverter; ESTADO.md atualizado — Entregue: parcial (E completo e runtime revertido provado com orderId 24/25; docs e ESTADO.md ficam para a proxima sessao) — Travou: dmpmqmsg -f /dev/null abortava sem tty (rc=71) e fazia rollback, entao o zerar nunca tinha funcionado (BOC da residual subiu 0->3); previsao "2085 no log" errada (log mostra BIP2232E no GravarDLQ + BIP2648E); log de eventos em UTC e CP1252, com rotacao a cada start.
