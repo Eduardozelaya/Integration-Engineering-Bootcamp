@@ -24,7 +24,7 @@ A diferença entre **perder** e **não perder** a mensagem nos experimentos C2 e
 - **O `BackoutCount` conta rollbacks de *qualquer* programa**, não só do ACE. Uma ferramenta de administração falhando em silêncio levou o BOC de uma mensagem de 0 para 3 ([evidência](docs/evidencias/achado-dmpmqmsg-boc3.txt)).
 - **O log de eventos registra o node que falhou, não o código do MQ**, e só registra o texto de retentativa na primeira tentativa. Para contar tentativas, use o trace ou os `BIP2232E`.
 
-Detalhes, premissas corrigidas e dívida de design: [`docs/projeto3-briefing.md`](docs/projeto3-briefing.md).
+Relatório técnico completo (configuração, previsões, evidências e conclusões de cada experimento): [`docs/projeto3-transacional.md`](docs/projeto3-transacional.md). Visão geral do plano: [`docs/projeto3-briefing.md`](docs/projeto3-briefing.md).
 
 ---
 
