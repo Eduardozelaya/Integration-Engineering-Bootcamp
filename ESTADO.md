@@ -248,8 +248,8 @@ iconv -f CP1252 -t UTF-8 /mnt/c/Users/LGzel/IBM/ACET12/servers/TEST_SERVER1/log/
 
 ### 7.1 Pendências de fechamento
 
-- [ ] Senha do laboratório trocada (`.env`, recriação do container, `mqsisetdbparms`) e validada com um caminho feliz
-- [ ] Repositório publicado no GitHub (`git remote -v` mostra `origin`)
+- [x] Senha do laboratório trocada (`.env`, recriação do container, `mqsisetdbparms`) e validada com um caminho feliz
+- [x] Repositório publicado no GitHub (`git remote -v` mostra `origin`)
 - [ ] `docs/projeto3-transacional.md` com C2, intervalo de 1 s, B2, E, achado do BOC e premissas corrigidas
 
 ### 7.2 Projeto 3, parte 2 — idempotência
@@ -375,6 +375,7 @@ ibmint deploy --input-bar-file C:\temp\OrderProcessing.bar --output-host localho
 
 - [x] ~~Migrar do `ace-projects.zip` para fontes versionados~~ — feito em 22/09 (`f1a3919`)
 - [x] ~~Histórico com senha: reescrever ou rotacionar?~~ — rotacionar, para preservar os hashes citados como evidência (24/09)
+- [x] ~~Publicar o repositório~~ — `github.com/Eduardozelaya/Integration-Engineering-Bootcamp`, 25/09
 - [ ] E-mail público nos commits: manter o Gmail ou usar o `noreply` do GitHub nos próximos
 - [ ] Limiar duplicado em três lugares (`BOTHRESH(3)`, `2` no ESQL, `"de 3"` no texto): UDP no flow e comentário ligando ao `queues.mqsc`
 - [ ] Invariante do `TratarFalha`: só é seguro com `Transaction mode: Yes`; registrar no ESQL e como regra de revisão (Projeto 5)
