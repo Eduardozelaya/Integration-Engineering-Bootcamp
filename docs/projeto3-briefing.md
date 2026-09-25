@@ -401,7 +401,7 @@ Os intervalos são de 1,020 s e 1,000 s. Não há linha com BOC 3.
 
 1. **Publicar o repositório.**
    - Confirmar `git check-ignore .env`.
-   - Procurar senhas no histórico com `git log -S "Abcd1234"`.
+   - Procurar senhas no histórico com `git log -S "<senha-antiga>"`.
    - Reescrever o `ESTADO.md` sem senhas.
    - Limpar o histórico antes do primeiro push, **ou** trocar a senha do laboratório.
    - Criar o remoto e fazer o `push`.
