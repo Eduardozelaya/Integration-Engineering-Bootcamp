@@ -1,77 +1,74 @@
 # ESTADO.md — Laboratório de Integração (IBM ACE + MQ + WSO2)
-### Documento de retomada. Última atualização: 19/09/2026
+### Documento de retomada. Última atualização: 24/09/2026
 
-> **Para o assistente que ler isto:** este arquivo é o estado completo do projeto. Não é preciso refazer diagnóstico de ambiente — tudo abaixo está verificado e funcionando. Vá direto para a seção 7 (Próximo passo).
+> **Para quem ler isto:** este arquivo é o estado atual do projeto. O ambiente abaixo está verificado. Vá direto para a seção 7 (Próximo passo).
+> Visão geral do plano e do Projeto 3: `docs/projeto3-briefing.md`. Histórico por sessão: `docs/log.md`.
 
 ---
 
 ## 1. Objetivo
 
-Profissional sênior de integração com base em **WSO2** fazendo transição para o ecossistema **IBM** (App Connect Enterprise, MQ, API Connect), com portfólio público de projetos como evidência. Mercado-alvo: Rio de Janeiro / São Paulo — bancos, seguradoras, consultorias.
+Profissional sênior de integração com base em **WSO2** fazendo a transição para o ecossistema **IBM** (App Connect Enterprise, MQ, API Connect). O entregável é um portfólio público em que cada competência vem com **evidência reproduzível**: código, configuração, logs e medições. Mercado-alvo: Rio de Janeiro e São Paulo — bancos, seguradoras e consultorias.
 
 Plano original em `plano-integration-engineer.md`; correções e reordenação em `plano-integration-engineer-addendum-v2.md`.
 
-**Cadência assumida:** 4–6 h/semana (Tier 1 em ~16 semanas). Ajustar se a disponibilidade real for outra.
+**Cadência assumida:** 4–6 h/semana (Tier 1 em ~16 semanas).
 
 ---
 
 ## 2. Ambiente — Linux (WSL2)
 
-Infraestrutura roda aqui. Desenvolvimento roda no Windows. A ponte é `localhost:1414`.
+A infraestrutura roda aqui e o desenvolvimento roda no Windows. A ponte entre os dois é `localhost:1414`.
 
 | Item | Valor |
 |---|---|
-| Distro | Debian 13 (trixie), WSL2, kernel 6.18 |
+| Distro | Debian 13 (trixie), WSL2 |
 | Usuário | `zelaya` |
-| RAM / swap | 4 GiB / 8 GiB (via `C:\Users\LGzel\.wslconfig`) |
-| Host | Windows 11, 8 GB RAM total |
-| Docker | engine **nativo** no WSL (não Docker Desktop), systemd via `/etc/wsl.conf` |
-| Java | Temurin 17, `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64`, alternatives em modo manual |
-| Outros | Maven 3.9.9, git 2.47.3, jq, curl, openssl |
-| Repositório | `~/integration-lab` (git, branch `master`, 7 commits) |
+| RAM / swap | 4 GiB / 8 GiB (via `C:\Users\LGzel\.wslconfig`); host com 8 GB no total |
+| Docker | engine **nativo** no WSL (não Docker Desktop); systemd via `/etc/wsl.conf` |
+| Java / build | Temurin 17, Maven 3.9.9 |
+| Utilitários | git, jq, curl, openssl, rsync, file (os dois últimos não vêm no Debian mínimo) |
+| Repositório | `~/integration-lab`, branch `master` |
 
 ### Containers
 
 ```
-qm1    icr.io/ibm-messaging/mq:latest   portas 1414, 9443   mem_limit 1g   uso real ~286 MiB
-mock   wiremock/wiremock:latest         porta 8080          mem_limit 256m  uso real ~82 MiB
+qm1    icr.io/ibm-messaging/mq:latest   portas 1414, 9443   mem_limit 1g
+mock   wiremock/wiremock:latest         porta 8080          mem_limit 256m
 ```
 
-Subir tudo: `cd ~/integration-lab && ./scripts/up.sh`
-Parar preservando dados: `docker compose stop` (**nunca** `down -v`, apaga o volume `mqdata`)
+- **Subir tudo:** `cd ~/integration-lab && ./scripts/up.sh`
+- **Parar preservando dados:** `docker compose stop`. **Nunca** `down -v`, que apaga o volume `mqdata`.
+- `wsl --shutdown` derruba os containers; depois dele, rode o `./scripts/up.sh` de novo.
+- **O queue manager roda em UTC.**
 
-> **Atenção:** `wsl --shutdown` derruba os containers. Depois dele, rodar `./scripts/up.sh` de novo.
+### Objetos do MQ — `mq/config/queues.mqsc` é a fonte da verdade
 
-### Objetos do MQ (`mq/config/queues.mqsc`, idempotente)
+Qualquer `ALTER` manual numa fila `APP.*` é desfeito no próximo `up.sh`. Um experimento que exija outro valor deve mudar o arquivo e commitar, ou declarar a alteração temporária na evidência.
 
 | Objeto | Configuração |
 |---|---|
 | `APP.IN` | `DEFPSIST(YES) BOTHRESH(3) BOQNAME('APP.BACKOUT') MAXDEPTH(50000)` |
-| `APP.OUT` | `DEFPSIST(YES)` |
-| `APP.BACKOUT` | `DEFPSIST(YES)` |
-| `APP.DLQ` | `DEFPSIST(YES)` |
-| `APP.REPLY` | `DEFPSIST(YES)` |
+| `APP.OUT`, `APP.BACKOUT`, `APP.DLQ`, `APP.REPLY` | `DEFPSIST(YES)` |
 | `APP.EVENTS` | TOPIC, topic string `app/events` |
-| `DEV.APP.SVRCONN` | SVRCONN com `MCAUSER('app')` — usa **ALTER**, nunca `DEFINE REPLACE` |
+| `DEV.APP.SVRCONN` | SVRCONN com `MCAUSER('app')`; usa **ALTER**, nunca `DEFINE REPLACE` |
 
-### Autorizações (`mq/config/authorities.sh`)
+### Autorizações — `mq/config/authorities.sh`
 
 ```bash
 setmqaut -m QM1 -t qmgr -p app +connect +inq +setall
 setmqaut -m QM1 -n "APP.**" -t queue -p app +put +get +inq +browse +passall +setall
 ```
 
-Principal `app`, perfil genérico `APP.**` (a imagem de desenvolvedor só autoriza `DEV.**`). Não existe grupo `mqclient` nesta imagem.
+O principal é `app`, com perfil genérico `APP.**`: a imagem de desenvolvedor só autoriza `DEV.**`, e não existe grupo `mqclient` nela.
 
-### Credenciais (`.env`, fora do Git)
+### Credenciais
 
-```
-MQ_QMGR_NAME=QM1
-MQ_ADMIN_PASSWORD=Abcd1234
-MQ_APP_PASSWORD=Abcd1234
-```
+As senhas ficam **só** no `.env`, que está fora do git. O modelo está em `.env.example`, e o `docker-compose.yml` lê as variáveis `${MQ_ADMIN_PASSWORD}` e `${MQ_APP_PASSWORD}`. As senhas do MQ precisam de pelo menos 8 caracteres.
 
-Console web: `https://localhost:9443` — usuário `admin`, senha `Abcd1234`.
+Console web: `https://localhost:9443`, usuário `admin`, senha em `MQ_ADMIN_PASSWORD`.
+
+> **Histórico:** até 24/09 este arquivo trazia a senha do laboratório em texto claro (commit `58650d1`). A senha foi trocada; a que consta no histórico está inválida.
 
 ---
 
@@ -80,10 +77,11 @@ Console web: `https://localhost:9443` — usuário `admin`, senha `Abcd1234`.
 | Item | Valor |
 |---|---|
 | ACE | **12.0.12.27** Developer Edition, Windows 64 |
-| Workspace | `C:\Users\LGzel\IBM\ACET12\workspace` |
-| Integration servers | `TEST_SERVER1`, `TEST_SERVER` — **independentes**, sem integration node |
+| Workspace do Toolkit | `C:\Users\LGzel\IBM\ACET12\workspace` |
+| **Work dir do servidor** | `C:\Users\LGzel\IBM\ACET12\servers\TEST_SERVER1` (fora do workspace, para evitar `duplicate entry`) |
+| Integration servers | `TEST_SERVER1`, independente, sem integration node |
 | MQ client | Redistributable 9.4.0.26 em `C:\MQClient` (o ACE **não** embarca cliente MQ) |
-| Usuário Windows | `LGzel` (≠ `zelaya`, que é o do Linux) |
+| Usuário Windows | `LGzel` (≠ `zelaya`, que é o usuário do Linux) |
 
 ### Variáveis de ambiente de usuário (obrigatórias)
 
@@ -93,212 +91,257 @@ MQ_INSTALLATION_PATH   = C:\MQClient
 MQ_FILE_PATH           = C:\MQClient
 ```
 
-Sem `MQ_INSTALLATION_PATH` o ACE não carrega as bibliotecas do MQ, mesmo com o PATH correto. O redistributable **não traz `setmqenv`**.
+Sem `MQ_INSTALLATION_PATH`, o ACE não carrega as bibliotecas do MQ, mesmo com o PATH correto. O redistributable **não traz `setmqenv`**.
 
-### Abrir o console de comandos do ACE
+### Console de comandos do ACE
 
 ```
 "C:\Program Files\IBM\ACE\12.0.12.27\ace.cmd"
 ```
 
-Comandos `mqsi*` e `ibmint` **só existem aqui**. Não existem no PowerShell comum nem no WSL.
+- Os comandos `mqsi*` e `ibmint` **só existem aqui**. É um cmd do Windows: `dir /a`, não `ls`.
+- A janela em que o `IntegrationServer` roda fica ocupada. Para os comandos `ibmint`, abra um **segundo** console. Fechar a primeira janela derruba o servidor.
+
+### Subir o servidor
+
+```
+IntegrationServer --work-dir C:\Users\LGzel\IBM\ACET12\servers\TEST_SERVER1
+```
+
+A inicialização terminou quando aparece o `BIP1991I` (o `BIP1990I` é só o início).
 
 ### Credencial do MQ no servidor
 
 ```
-mqsisetdbparms -w C:\Users\LGzel\IBM\ACET12\workspace\TEST_SERVER1 -n mq::mqcreds -u app -p Abcd1234
-mqsireportdbparms -w C:\Users\LGzel\IBM\ACET12\workspace\TEST_SERVER1 -n mq::mqcreds
+mqsisetdbparms -w C:\Users\LGzel\IBM\ACET12\servers\TEST_SERVER1 -n mq::mqcreds -u app -p <MQ_APP_PASSWORD do .env>
+mqsireportdbparms -w C:\Users\LGzel\IBM\ACET12\servers\TEST_SERVER1 -n mq::mqcreds
 ```
 
-Sintaxe `-w` porque é servidor independente. Servidor com node usaria `mqsisetdbparms NOMEDONODE ...`.
+A sintaxe `-w` é a de servidor independente. Reinicie o servidor depois de alterar a credencial.
+
+### Log de eventos do servidor
+
+| Propriedade | Valor |
+|---|---|
+| Arquivo | `servers\TEST_SERVER1\log\integration_server.TEST_SERVER1.events.txt` |
+| No WSL | `/mnt/c/Users/LGzel/IBM/ACET12/servers/TEST_SERVER1/log/` |
+| Rotação | a cada inicialização: atual → `.1` → … → `.9` |
+| Codificação | CP1252 (o `grep` o trata como binário) |
+| Relógio | **UTC**, com sufixo `Z`; a janela do servidor mostra hora local |
+
+```bash
+iconv -f CP1252 -t UTF-8 <arquivo> | grep ...
+```
 
 ---
 
 ## 4. Artefatos do ACE
 
-### `R2Policies` (Policy Project)
-`MQ_LOCAL.policyxml`, tipo **MQEndpoint**:
+### Fontes versionados
+
+| Projeto do workspace | Pasta no repositório |
+|---|---|
+| `OrderProcessing` (Application) | `ace/apps/OrderProcessing` |
+| `R2Policies` (Policy Project) | `ace/policies/R2Policies` |
+
+A cópia é feita por `scripts/sync-ace.sh`, com mapa explícito projeto → pasta. O padrão é dry-run; `--apply` aplica. O script falha se a origem não existir e usa `-rt --chmod=D755,F644` para não herdar o 777 do NTFS. Projetos de curso do workspace **não** vão para o repositório.
+
+**Regra: deploy → `./scripts/sync-ace.sh --apply` → commit.**
+
+### `R2Policies` / `MQ_LOCAL.policyxml` (tipo MQEndpoint)
 
 | Propriedade | Valor |
 |---|---|
 | Connection | `CLIENT` |
-| Queue manager name | `QM1` |
-| Queue manager host name | `localhost` |
-| Listener port number | `1414` |
-| Channel name | `DEV.APP.SVRCONN` |
+| Queue manager | `QM1`, host `localhost`, porta `1414` |
+| Channel | `DEV.APP.SVRCONN` |
 | Security identity (DSN) | `mqcreds` |
 | Use SSL | `false` (TLS é o Projeto 11) |
 
-### `OrderProcessing` (Application)
-`PassThrough.msgflow`: `MQInput(APP.IN)` → `Compute` → `MQOutput(APP.OUT)`, ambos os nodes MQ com policy `{R2Policies}:MQ_LOCAL`.
-`MQInput`: Message domain `JSON`, **Transaction mode `Yes`**.
+### `OrderProcessing` / `PassThrough.msgflow`
 
-`PassThrough_Compute.esql`:
-```sql
-CREATE COMPUTE MODULE PassThrough_Compute
-  CREATE FUNCTION Main() RETURNS BOOLEAN
-  BEGIN
-    SET OutputRoot = InputRoot;
-    SET OutputRoot.JSON.Data.processedBy = 'ACE-LAB';
-    SET OutputRoot.JSON.Data.processedAt =
-        CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SSSZZZ');
-    RETURN TRUE;
-  END;
-END MODULE;
+```
+LerPedido (MQInput APP.IN) ──► ProcessarPedido (Compute) ──► GravarSaida (MQOutput APP.OUT)
+        │
+        └─ Catch ──► RegistrarTentativa (Trace) ──► TratarFalha (Compute) ──► GravarDLQ (MQOutput APP.DLQ)
 ```
 
-Backup versionado em `ace/ace-projects.zip` (Project Interchange).
+| Node | Função |
+|---|---|
+| `LerPedido` | domínio JSON; `Transaction mode` **Yes** (é o padrão, por isso o atributo não aparece no `.msgflow`); policy `{R2Policies}:MQ_LOCAL` |
+| `ProcessarPedido` | acrescenta `processedBy: ACE-LAB` e `processedAt` em ISO, UTC. Com `"forcarErro":"true"` no corpo, lança `THROW USER EXCEPTION 2951` |
+| `RegistrarTentativa` | grava em `C:\temp\catch-trace.txt` a linha `${CURRENT_GMTTIMESTAMP} BOC=${Root.MQMD.BackoutCount} orderId=${Root.JSON.Data.orderId}` |
+| `TratarFalha` | com `BOC < 2`, relança (rollback e nova entrega); com `BOC = 2`, monta `{original, erro{codigo, mensagem, detalhe, tentativas, flow, falhouEm}}` |
+| `GravarDLQ` | grava em `APP.DLQ`, commitando junto com a remoção da mensagem de `APP.IN` |
+
+### Empacotar e implantar
+
+```
+ibmint package --input-path C:\Users\LGzel\IBM\ACET12\workspace --output-bar-file C:\temp\OrderProcessing.bar --project OrderProcessing --project R2Policies
+ibmint deploy --input-bar-file C:\temp\OrderProcessing.bar --output-host localhost --output-port 7600
+```
+
+Na reimplantação, o `BIP9339W` (policy sem mudança) é esperado e inofensivo.
 
 ---
 
 ## 5. O que já está provado
 
-1. **Ambiente reprodutível.** `./scripts/up.sh` recria MQ e mock do zero, aplica filas e autorizações, e imprime verificação (`BOTHRESH(3)`, `MCAUSER(app)`).
-2. **ACE (Windows) conecta ao MQ (WSL)** em modo CLIENT, autenticado por credencial do vault.
-3. **Flow `PassThrough` funciona ponta a ponta.** Mensagem em `APP.IN` sai em `APP.OUT` com `processedBy` e `processedAt`.
-4. **Backout funciona.** Numa falha real de autorização, o ACE fez rollback e moveu a mensagem para `APP.BACKOUT`, com o payload original intacto (sem os campos do Compute) — prova de rollback limpo.
-5. **Duplicação está demonstrada.** A mesma mensagem enviada duas vezes gerou duas saídas — o "antes" que o Projeto 3 vai corrigir com idempotência.
+| # | Prova | Evidência |
+|---|---|---|
+| 1 | Ambiente reprodutível: o `up.sh` recria o MQ e o mock e aplica filas e autorizações | `scripts/up.sh` |
+| 2 | ACE (Windows) conecta ao MQ (WSL) em modo CLIENT, com credencial do vault | sessão de 18/09 |
+| 3 | Flow ponta a ponta: `APP.IN` → `APP.OUT` com `processedBy` e `processedAt` em UTC | caminho feliz |
+| 4 | **C2** — o Catch retenta sob controle: trace BOC 0, 1, 2, depois DLQ com motivo estruturado | `exp-c2-*` |
+| 5 | **Intervalo de ~1 s fixo entre reentregas**, medido em três experimentos (A, C2, E); não garantido nem configurável | `exp-c2-trace.txt`, `exp-e-trace.txt` |
+| 6 | **B2** — com `Transaction mode: No`, o Catch dispara uma vez e a mensagem se perde; o log ainda anuncia "Retentativa 1 de 3" | `exp-b2-*` |
+| 7 | **E** — se o próprio tratamento falhar, o rollback desfaz tudo e o MQ move a mensagem original para `APP.BACKOUT` (`BIP2648E`) | `exp-e-*` |
+| 8 | **O BOC sobe com o rollback de qualquer programa**, não só do ACE: uma mensagem residual foi de 0 para 3 por falhas do `dmpmqmsg` | `achado-dmpmqmsg-boc3.txt` |
+| 9 | Duplicação demonstrada: a mesma mensagem enviada duas vezes gera duas saídas (o "antes" da idempotência) | sessão de 19/09 |
 
 ---
 
 ## 6. Erros resolvidos (registro — vale como conteúdo)
 
-Cadeia de cinco obstáculos, cada um mascarando o seguinte. Material de artigo.
+### Cadeia de conexão ACE ↔ MQ (18/09)
 
 | # | Erro | Causa | Solução |
 |---|---|---|---|
-| 1 | `BIP1361E` | Policy Project é artefato separado da Application e precisa ser implantado também | Incluir `R2Policies` no BAR, ou implantar separado |
-| 2 | `BIP2684E` | ACE não embarca cliente MQ; conexão CLIENT exige bibliotecas nativas C | Instalar MQ Redistributable Client em `C:\MQClient` |
-| 3 | `BIP2684E` persistindo | PATH acha a DLL, mas o runtime precisa saber a raiz da instalação; o redist não traz `setmqenv` | Definir `MQ_INSTALLATION_PATH` e `MQ_FILE_PATH` |
-| 4 | `2035` / `AMQ8077W` no `APP.IN` | Imagem de desenvolvedor só autoriza `DEV.**`; não existe grupo `mqclient` | `setmqaut` no principal `app`, perfil `APP.**` |
-| 5 | `2035` no `MQOutput` e `APP.BACKOUT` | `SET OutputRoot = InputRoot` copia o MQMD; gravar com contexto de outra mensagem é permissão separada de `put` | Acrescentar `+passall +setall` |
+| 1 | `BIP1361E` | o Policy Project é um artefato separado e precisa ser implantado também | incluir `R2Policies` no BAR |
+| 2 | `BIP2684E` | o ACE não embarca cliente MQ | instalar o MQ Redistributable Client |
+| 3 | `BIP2684E` persistindo | o runtime precisa da raiz da instalação | definir `MQ_INSTALLATION_PATH` e `MQ_FILE_PATH` |
+| 4 | `2035` no `APP.IN` | a imagem de dev só autoriza `DEV.**` | `setmqaut` no principal `app`, perfil `APP.**` |
+| 5 | `2035` no `MQOutput` | `SET OutputRoot = InputRoot` copia o MQMD; gravar com contexto de outra mensagem exige permissão própria | `+passall +setall` |
 
-Outros dois:
+### Armadilhas silenciosas (o comando "funciona" e não faz o esperado)
 
-- **`DEFINE ... REPLACE` zera atributos não informados.** Nosso mqsc redefiniu `DEV.APP.SVRCONN` e apagou silenciosamente o `MCAUSER('app')` que a imagem já tinha. Usar `ALTER` em objeto pré-existente. Sem erro emitido — o comando "funcionou".
-- **`ibmint package --java-version` não existe no 12.0.12.27.** A sintaxe do `ibmint` varia por fix pack. Rodar o comando sem argumentos e ler a ajuda antes de escrever script de pipeline.
+| Armadilha | Consequência | Regra |
+|---|---|---|
+| `DEFINE ... REPLACE` em objeto pré-existente | zera atributos não informados (apagou o `MCAUSER`) | `ALTER` em objeto que a imagem já cria |
+| `dmpmqmsg -I <fila> -f /dev/null` | pergunta se sobrescreve o arquivo, aborta sem terminal (rc 71) e faz rollback, **incrementando o BOC** | `-f stdout > /dev/null` e testar o `rc` |
+| `2>/dev/null` em passo destrutivo | esconde a falha | todo passo destrutivo testa o `rc` e imprime `ok`/`FALHOU` |
+| `git grep` / `git log -- <caminho>` fora da raiz | busca só na subpasta atual; o teste "passa" | rodar da raiz ou usar `git -C ~/integration-lab ...` |
+| `EOF` de heredoc indentado | o terminal fica esperando (`>`) | `EOF` sempre na coluna 0 |
+| `cp` de `/mnt/c` | o arquivo entra no git como executável (777 do NTFS) | `install -m 644` ou `chmod 644` |
+| `mkdir` fora da condição `--apply` | um dry-run que escreve em disco | dry-run estritamente só leitura |
 
-Diagnóstico padrão de `2035`: sempre o log do queue manager, nunca a mensagem do Toolkit.
+### Outros
+
+- **`ibmint package --java-version` não existe no 12.0.12.27.** A sintaxe varia por fix pack; rode o comando sem argumentos e leia a ajuda antes de escrever script de pipeline.
+- **`CLEAR QLOCAL` falha com o ACE ligado** (`AMQ8148`, fila em uso). Esvazie com o `dmpmqmsg` corrigido.
+- **Work dir dentro do workspace** causa `duplicate entry` no Toolkit. Por isso ele foi para `servers\`.
+- **`APPLTAG` guarda só os últimos 28 caracteres** do caminho do executável. Para achar a conexão do ACE, filtre por canal ou `CONNAME`.
+- **`CONNAME(172.18.0.1)`** é o gateway da bridge do Docker. Todo cliente do Windows aparece com esse endereço, então CHLAUTH por endereço não distingue o ACE (Projeto 11).
+- **O log não registra o código do MQ** quando um `MQOutput` falha no Catch: registra `BIP2232E` no node. O texto "Retentativa N" só é logado para N = 1. **Conte tentativas pelos `BIP2232E` ou pelo trace.**
+- **Dois relógios:** o trace (Windows) e o `PutTime` (container) diferem alguns milissegundos. Diferenças abaixo de ~10 ms entre máquinas não têm significado.
+
+### Diagnóstico padrão
+
 ```bash
-docker exec qm1 bash -c 'tail -60 /var/mqm/qmgrs/QM1/errors/AMQERR01.LOG'
+docker exec qm1 bash -c 'tail -60 /var/mqm/qmgrs/QM1/errors/AMQERR01.LOG'     # 2035, canal, autenticação
+iconv -f CP1252 -t UTF-8 /mnt/c/Users/LGzel/IBM/ACET12/servers/TEST_SERVER1/log/integration_server.TEST_SERVER1.events.txt | tail -40
 ```
 
 ---
 
 ## 7. PRÓXIMO PASSO (comece aqui)
 
-### 7.1 Pendência imediata (5 min)
+### 7.1 Pendências de fechamento
 
-O ESQL foi corrigido com o formato ISO mas **ainda não foi implantado**. Pelo Command Console:
+- [ ] Senha do laboratório trocada (`.env`, recriação do container, `mqsisetdbparms`) e validada com um caminho feliz
+- [ ] Repositório publicado no GitHub (`git remote -v` mostra `origin`)
+- [ ] `docs/projeto3-transacional.md` com C2, intervalo de 1 s, B2, E, achado do BOC e premissas corrigidas
 
-```
-ibmint package --input-path C:\Users\LGzel\IBM\ACET12\workspace --output-bar-file C:\temp\OrderProcessing.bar --project OrderProcessing --project R2Policies
+### 7.2 Projeto 3, parte 2 — idempotência
 
-tar -tf C:\temp\OrderProcessing.bar
+**Antes de codificar, responda por escrito em `docs/projeto3-idempotencia.md`:**
 
-ibmint deploy --input-bar-file C:\temp\OrderProcessing.bar --output-host localhost --output-port 7600
-```
+1. Em que ponto do flow o `MsgId` (ou o `orderId`) é marcado como processado? O **Global Cache não participa da transação MQ**:
+   - marcar **antes** de um rollback faz a reentrega ser descartada como duplicata, o que é perda silenciosa;
+   - marcar **depois** do commit deixa uma janela de duplicação.
 
-(A porta 7600 é a API REST de administração — a mesma que o Toolkit usa, funciona com o servidor no ar.)
+   Descreva essa janela com precisão. Ela é o argumento para a tabela sob XA do Projeto 10.
+2. A chave de idempotência é o `MsgId` do MQ ou um identificador de negócio (`orderId`)? Um reenvio pelo cliente gera `MsgId` novo.
+3. Por quanto tempo a marca vale? Defina o TTL e o que acontece quando ele expira.
 
-Valide mandando `{"orderId":"9","valor":900}` em `APP.IN` e conferindo que `processedAt` saiu como `2026-09-19T...` e não como `TIMESTAMP '...'`.
+**Definition of done:** a mesma mensagem enviada duas vezes gera **uma** saída em `APP.OUT`, e a segunda é descartada com log. Um rollback no meio **não** faz a reentrega ser descartada. Três evidências (laço de filas, trace e log) com o mesmo identificador.
 
-### 7.2 Sessão 3 — Projeto 3, parte 1 (~2h30)
+### 7.3 Resto do Projeto 3
 
-**Definition of done:** provar que falha no flow causa rollback, que o contador de backout incrementa a cada tentativa, e que na terceira a mensagem vai para `APP.BACKOUT` com `BOC 3`.
-
-**Exercício 1 — falha controlada.** No `PassThrough_Compute.esql`, logo após `SET OutputRoot = InputRoot;`:
-
-```sql
-IF InputRoot.JSON.Data.forcarErro = 'true' THEN
-    THROW USER EXCEPTION MESSAGE 2951 VALUES('Falha proposital para testar backout');
-END IF;
-```
-
-Deploy.
-
-**Exercício 2 — o experimento.** Mandar em `APP.IN`:
-```json
-{"orderId":"3","forcarErro":"true"}
-```
-Esperar ~10 s (três tentativas), depois:
-```bash
-docker exec -i qm1 runmqsc QM1 <<'EOF'
-DISPLAY QLOCAL(APP.IN) CURDEPTH
-DISPLAY QLOCAL(APP.BACKOUT) CURDEPTH
-EOF
-
-docker exec qm1 bash -c 'dmpmqmsg -m QM1 -i APP.BACKOUT -f stdout' 2>/dev/null | grep -E "^A BOC|^A MSI"
-```
-Esperado: `APP.IN(0)`, `APP.BACKOUT(1)`, **`BOC 3`**. Anotar os estados intermediários.
-
-**Exercício 3 — o contraste.** Mudar `MQInput` para `Transaction mode: No`, repetir. A mensagem some: não vai para `APP.OUT`, nem `APP.BACKOUT`, nem DLQ. Perda de mensagem reproduzível, mesma lógica, uma propriedade diferente. **Este par de experimentos é o núcleo do Projeto 3.**
-
-**Exercício 4 — voltar para `Yes`** e documentar os dois resultados em `docs/projeto3-transacional.md`.
-
-### 7.3 Resto do Projeto 3 (sessões seguintes)
-
-- Tratamento de erro estruturado: terminal `Failure` + subflow de erro, log com `correlationId`.
-- Roteamento para `APP.DLQ` com motivo, em vez de só backout.
-- Idempotência: consumir duplicata sem duplicar efeito (Global Cache agora; tabela no Projeto 10).
-- Request/reply usando `APP.REPLY` e `ReplyToQ`.
-- Pub/sub com `APP.EVENTS`, assinatura durável vs não-durável.
-- **Teste final:** 100 mensagens, 30% forçando erro → `APP.OUT + APP.DLQ = 100`, zero duplicatas, três execuções seguidas.
-- Tuning: `Additional instances`, medir throughput, observar perda de ordenação.
+- Classificar erro permanente × transitório no `TratarFalha`. Isso muda o critério do teste final para `OUT + DLQ + BACKOUT = 100`; escreva o critério **antes**.
+- Request/reply com `APP.REPLY`, `ReplyToQ` e `CorrelId = MsgId`; dois clientes simultâneos.
+- Pub/sub em `APP.EVENTS`, com assinatura durável × não durável.
+- **Teste final:** 100 mensagens, 30% com erro, soma fechando, zero duplicatas, três execuções seguidas.
+- Tuning com `Additional instances`: medir throughput e observar a perda de ordenação.
 
 ---
 
-## 8. Roteiro restante
+## 8. Roteiro
 
 **Tier 1 — a linha de corte (~80–100 h). A partir daqui, começar a se candidatar.**
 
 | # | Projeto | Estado |
 |---|---|---|
-| 1 | Conector R2/S3 com SigV4 | pendente — fechar sem expandir |
-| 3 | MQ transacional (backout, DLQ, idempotência) | **em andamento** |
-| 7 | Observabilidade — versão mínima | pendente |
-| 5 | CI/CD e containers — versão mínima | pendente |
+| 1 | Conector R2/S3 com SigV4 | pendente; o flow `testarR2` está no `Module5` e precisa ser extraído para projeto próprio |
+| 3 | MQ transacional | **parte 1 concluída**; parte 2 em seguida |
+| 7 | Observabilidade (mínimo) | pendente; testar se o OpenTelemetry habilita no Windows (está desligado por *configuração*) |
+| 5 | CI/CD e containers (mínimo) | pendente; `sync-ace.sh` e fontes versionados já são base |
 
-**Tier 2 (~+60 h):** 9 (DFDL/copybook — maior lacuna do plano original), 10 (banco + transação coordenada XA), 6 (segurança ponta a ponta), 11 (TLS/CHLAUTH/CONNAUTH no MQ).
+**Tier 2 (~+60 h):** 9 (DFDL/copybook), 10 (banco + XA), 6 (segurança ponta a ponta), 11 (TLS/CHLAUTH/CONNAUTH no MQ).
 
 **Tier 3:** 4 (Kafka), 2 (gateway), 8 (capstone).
 
-**Restrições conhecidas de memória (host 8 GB):**
-- MQ + mock + Postgres + Keycloak: cabem juntos.
+**Restrições de memória (host de 8 GB):**
+- MQ + mock + Postgres + Keycloak cabem juntos.
 - Kafka/Redpanda e WSO2 MI: um de cada vez.
-- **DataPower (4 GB+): não roda nesta máquina.** Projeto 2 fica para outra máquina ou VM de nuvem.
-- **OpenTelemetry só existe no ACE Linux x86-64.** O Projeto 7 exige ACE em container — antecipa parte do Projeto 5.
+- **DataPower (4 GB+) não roda nesta máquina.**
 
 ---
 
 ## 9. Comandos de referência
 
 ```bash
-# --- WSL ---
-cd ~/integration-lab && ./scripts/up.sh      # sobe tudo e aplica filas + autorizações
+# --- WSL: ambiente ---
+cd ~/integration-lab && ./scripts/up.sh
 docker ps --format "table {{.Names}}\t{{.Status}}"
-docker stats --no-stream
-docker compose stop                          # preserva o volume
-docker exec -i qm1 runmqsc QM1 < mq/config/queues.mqsc
-docker exec qm1 bash -c 'tail -60 /var/mqm/qmgrs/QM1/errors/AMQERR01.LOG'
-docker exec qm1 bash -c 'dmpmqaut -m QM1 -n APP.IN -t queue'
-docker exec qm1 bash -c 'dmpmqmsg -m QM1 -i APP.BACKOUT -f stdout' 2>/dev/null | head -30
+docker compose stop                                   # preserva o volume
 
-docker exec -i qm1 runmqsc QM1 <<'EOF'
-DISPLAY QLOCAL(APP.IN) CURDEPTH
-DISPLAY QLOCAL(APP.OUT) CURDEPTH
-DISPLAY QLOCAL(APP.BACKOUT) CURDEPTH
-CLEAR QLOCAL(APP.OUT)
+# --- WSL: estado das filas (portao antes de todo experimento) ---
+docker exec -i qm1 runmqsc QM1 <<'EOF' | grep -E "QUEUE|CURDEPTH|IPPROCS"
+DISPLAY QSTATUS(APP.IN) CURDEPTH IPPROCS
+DISPLAY QSTATUS(APP.OUT) CURDEPTH
+DISPLAY QSTATUS(APP.BACKOUT) CURDEPTH
+DISPLAY QSTATUS(APP.DLQ) CURDEPTH
 EOF
+
+# --- WSL: zerar filas (funciona com o ACE ligado; testa o rc) ---
+for q in APP.OUT APP.DLQ APP.BACKOUT; do
+  docker exec qm1 bash -c "dmpmqmsg -m QM1 -I $q -f stdout" > /dev/null 2>&1 \
+    && echo "ok      $q" || echo "FALHOU  $q (rc=$?)"
+done
+
+# --- WSL: enviar, ler e inspecionar ---
+docker exec -i qm1 bash -c '/opt/mqm/samp/bin/amqsput APP.IN QM1' <<'EOF'
+{"orderId":"NN","valor":100}
+EOF
+docker exec -i qm1 bash -c '/opt/mqm/samp/bin/amqsget APP.OUT QM1'        # destrutivo
+docker exec -i qm1 bash -c '/opt/mqm/samp/bin/amqsbcg APP.DLQ QM1'        # so leitura
+
+# --- WSL: sincronizar fontes do ACE ---
+./scripts/sync-ace.sh            # dry-run
+./scripts/sync-ace.sh --apply
+git diff ace/
+
+# --- WSL: evidencias ---
+grep "orderId='NN'" /mnt/c/temp/catch-trace.txt | tee docs/evidencias/<exp>-trace.txt
+chmod 644 docs/evidencias/*.txt
 ```
 
 ```
-:: --- Windows (ACE Command Console) ---
+:: --- Windows (console do ACE) ---
 "C:\Program Files\IBM\ACE\12.0.12.27\ace.cmd"
-
-mqsireportdbparms -w C:\Users\LGzel\IBM\ACET12\workspace\TEST_SERVER1 -n mq::mqcreds
-IntegrationServer --work-dir C:\Users\LGzel\IBM\ACET12\workspace\TEST_SERVER1
-
+IntegrationServer --work-dir C:\Users\LGzel\IBM\ACET12\servers\TEST_SERVER1
+mqsireportdbparms -w C:\Users\LGzel\IBM\ACET12\servers\TEST_SERVER1 -n mq::mqcreds
 ibmint package --input-path C:\Users\LGzel\IBM\ACET12\workspace --output-bar-file C:\temp\OrderProcessing.bar --project OrderProcessing --project R2Policies
 ibmint deploy --input-bar-file C:\temp\OrderProcessing.bar --output-host localhost --output-port 7600
 ```
@@ -308,19 +351,35 @@ ibmint deploy --input-bar-file C:\temp\OrderProcessing.bar --output-host localho
 ## 10. Método e disciplina
 
 - **Commit por sessão.** Sem commit, a sessão não aconteceu.
-- **`docs/log.md`** — uma linha por sessão: data, horas, definition of done, entregue?, o que travou.
-- **`docs/notas/erros.md`** — regra dos 45 minutos: travou 45 min no mesmo erro, registra e muda de tarefa.
+- **`docs/log.md`:** uma linha por sessão — data, horas, definition of done, entregue?, o que travou.
 - **Definition of done escrita antes de começar**, não depois.
-- **Vídeo de 90 s por projeto** no README — item de maior retorno por hora do plano; recrutador não clona repositório.
-- **Nada de artefato de empregador** no repositório, mesmo sem dados sensíveis. Tudo reimplementado do zero.
-- Repositório público desde o início: muda o comportamento de quem escreve.
+- **Regra dos 45 minutos:** travou 45 min no mesmo erro, registra em `docs/notas/erros.md` e muda de tarefa.
+- **Previsão escrita antes de rodar o experimento.** Quando ela erra, o erro vira linha na tabela de premissas corrigidas.
+- **Evidência autocontida:**
+  - estado inicial comprovado (portão com quatro `CURDEPTH(0)` e `IPPROCS(1)`);
+  - marcador de disparo;
+  - o mesmo `orderId` em todas as fontes;
+  - diff de uma linha isolando a mudança.
+- **Evidência de log vem do `events.txt`, nunca da janela.** Colete antes de reiniciar o servidor.
+- **Reversão se prova em duas camadas:** `git diff` vazio (arquivo) **e** uma mensagem de erro chegando ao destino certo (runtime).
+- **Passo destrutivo testa o `rc`.** Nada de `2>/dev/null` sem checagem.
+- **Separar mudança de layout de mudança de lógica** nos commits do `.msgflow`.
+- **Vídeo de 90 s por projeto** no README; recrutador não clona repositório.
+- **Nada de artefato de empregador** no repositório. Tudo reimplementado do zero.
+- **Segredos só no `.env`.** Antes de todo push, `git -C ~/integration-lab grep -n -i "password\|senha\|secret"`.
+- **Cópia de segurança:** `git bundle create /mnt/c/Users/LGzel/integration-lab-$(date +%F).bundle --all`.
 
 ---
 
 ## 11. Decisões em aberto
 
-- [ ] Mestrado em paralelo? (pastas "Mestrado em eng…" e "Artigos para Congre…" no perfil sugerem que sim). Se sim, manter 4 h/semana e Tier 1 em ~16 semanas.
-- [ ] Inglês técnico de conversa — para vagas IBM em consultoria/squad internacional, elimina mais candidatos que conhecimento de ACE. Teste: gravar 3 min explicando o Projeto 3 em inglês.
-- [ ] Reorganizar workspace do ACE em `LabMQPolicies` / `LabShared` / `OrderProcessing` (hoje a policy está em `R2Policies`, herdado de outro contexto).
-- [ ] Migrar de `ace-projects.zip` (Project Interchange) para versionamento dos fontes (`.msgflow`, `.esql`, `.policyxml` são texto) — pré-requisito para diff legível em revisão de código no Projeto 5.
-- [ ] Certificação **C1000-171** (ACE v12.0 — mesma versão instalada). Cobre App Connect Designer e CDK, que o plano não estuda: reservar ~6 h. **Agendar a prova antes de se sentir pronto** — é o único mecanismo do plano que cria prazo.
+- [x] ~~Migrar do `ace-projects.zip` para fontes versionados~~ — feito em 22/09 (`f1a3919`)
+- [x] ~~Histórico com senha: reescrever ou rotacionar?~~ — rotacionar, para preservar os hashes citados como evidência (24/09)
+- [ ] E-mail público nos commits: manter o Gmail ou usar o `noreply` do GitHub nos próximos
+- [ ] Limiar duplicado em três lugares (`BOTHRESH(3)`, `2` no ESQL, `"de 3"` no texto): UDP no flow e comentário ligando ao `queues.mqsc`
+- [ ] Invariante do `TratarFalha`: só é seguro com `Transaction mode: Yes`; registrar no ESQL e como regra de revisão (Projeto 5)
+- [ ] Limpar o `TEST_SERVER1`: remover do servidor os apps de curso (`Module5`, `Modulo4`, `Modulo8`, `LojaApiV2`); eles continuam no workspace
+- [ ] Reorganizar o workspace em `LabMQPolicies` / `LabShared` / `OrderProcessing` (hoje a policy está em `R2Policies`)
+- [ ] Mestrado em paralelo? Se sim, manter 4 h/semana e Tier 1 em ~16 semanas
+- [ ] Inglês técnico de conversa. Teste: gravar 3 min explicando o Projeto 3 em inglês
+- [ ] Certificação **C1000-171** (ACE v12.0). Cobre App Connect Designer e CDK (~6 h a mais). **Agendar a prova antes de se sentir pronto.**
