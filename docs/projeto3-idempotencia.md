@@ -21,7 +21,7 @@
 | D0 — linha de base | 2 saídas para o mesmo orderId | OUT 2; MsgId diferentes (`exp-d0-duplicata.txt`) |
 | D1 — deduplicação | OUT 1, DUP 1 | OUT 1 (99 bytes, processado), DUP 1 (29 bytes, original intacto); MsgId diferentes (`exp-d1-deduplicacao.txt`) |
 | D2a — falha após a marca, sem desmarcar | DUP 1, OUT 0, DLQ 0 (pedido legítimo perdido como duplicata) | DUP 1, OUT 0, DLQ 0; trace 1 linha (BOC 0); log termina em "Retentativa 1 de 3" e a 2ª entrega não deixa rastro (`exp-d2a-falha-apos-marca.txt`) |
-| D2b — com desmarcar condicionado | DLQ 1 com motivo, DUP 0 | |
+| D2b — com desmarcar condicionado | DLQ 1 com motivo, DUP 0 | trace 3 linhas; DLQ 1 com motivo (tentativas 3), DUP 0; reenvio sem gatilho processado (OUT 1) (`exp-d2b-desmarcar-no-catch.txt`) |
 | D3 — reinício do servidor | OUT 2 (memória perdida) | |
 
 ## 6. Dívida de design e achados

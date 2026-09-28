@@ -2,6 +2,13 @@ CREATE COMPUTE MODULE PassThrough_TratarFalha
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
     DECLARE tentativa INTEGER InputRoot.MQMD.BackoutCount;
+    
+    -- Idempotencia: se ESTA mensagem marcou o pedido, desfaz a marca antes do rollback.
+    -- Sem isto, a reentrega encontra a marca e vai para APP.DUP (exp D2a).
+    IF Environment.Idempotencia.chaveMarcada IS NOT NULL THEN
+      CALL desmarcar(Environment.Idempotencia.chaveMarcada);
+      SET Environment.Idempotencia.chaveMarcada = NULL;
+    END IF;
 
     -- Ainda há tentativas: relança para provocar rollback e retentativa
     IF tentativa < 2 THEN
