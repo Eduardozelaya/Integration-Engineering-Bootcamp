@@ -1,0 +1,30 @@
+-- Idempotencia.esql
+-- Marcas de pedidos ja processados, na memoria do integration server.
+-- ATENCAO: esta memoria NAO participa da transacao MQ. Um rollback nao desfaz
+-- a marca, e um reinicio ou redeploy do flow apaga todas.
+-- Ver docs/projeto3-idempotencia.md.
+
+DECLARE marcasIdempotencia SHARED ROW;
+
+CREATE FUNCTION jaProcessado(IN chave CHARACTER) RETURNS BOOLEAN
+BEGIN
+  DECLARE achou BOOLEAN FALSE;
+  BEGIN ATOMIC
+    SET achou = FIELDTYPE(marcasIdempotencia.{'k' || chave}) IS NOT NULL;
+  END;
+  RETURN achou;
+END;
+
+CREATE PROCEDURE marcarProcessado(IN chave CHARACTER)
+BEGIN
+  BEGIN ATOMIC
+    SET marcasIdempotencia.{'k' || chave} = CURRENT_GMTTIMESTAMP;
+  END;
+END;
+
+CREATE PROCEDURE desmarcar(IN chave CHARACTER)
+BEGIN
+  BEGIN ATOMIC
+    SET marcasIdempotencia.{'k' || chave} = NULL;
+  END;
+END;

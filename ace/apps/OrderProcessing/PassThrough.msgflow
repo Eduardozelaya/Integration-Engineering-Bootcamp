@@ -12,23 +12,27 @@
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="288,122" computeExpression="esql://routine/#PassThrough_Compute.Main">
         <translation xmi:type="utility:ConstantString" string="ProcessarPedido"/>
       </nodes>
-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="501,116" queueName="APP.OUT" policyUrl="{R2Policies}:MQ_LOCAL">
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="527,154" queueName="APP.OUT" policyUrl="{R2Policies}:MQ_LOCAL">
         <translation xmi:type="utility:ConstantString" string="GravarSaida"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="373,197" computeExpression="esql://routine/#PassThrough_TratarFalha.Main">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="369,246" computeExpression="esql://routine/#PassThrough_TratarFalha.Main">
         <translation xmi:type="utility:ConstantString" string="TratarFalha"/>
       </nodes>
-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="612,210" queueName="APP.DLQ" policyUrl="{R2Policies}:MQ_LOCAL">
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="605,249" queueName="APP.DLQ" policyUrl="{R2Policies}:MQ_LOCAL">
         <translation xmi:type="utility:ConstantString" string="GravarDLQ"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="199,242" destination="file" filePath="C:\temp\catch-trace.txt" pattern="${CURRENT_GMTTIMESTAMP} BOC=${Root.MQMD.BackoutCount} orderId=${Root.JSON.Data.orderId}">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="178,216" destination="file" filePath="C:\temp\catch-trace.txt" pattern="${CURRENT_GMTTIMESTAMP} BOC=${Root.MQMD.BackoutCount} orderId=${Root.JSON.Data.orderId}">
         <translation xmi:type="utility:ConstantString" string="RegistrarTentativa"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="518,66" queueName="APP.DUP" policyUrl="{R2Policies}:MQ_LOCAL">
+        <translation xmi:type="utility:ConstantString" string="GravarDuplicata"/>
       </nodes>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
     </composition>
     <propertyOrganizer/>
     <stickyBoard/>

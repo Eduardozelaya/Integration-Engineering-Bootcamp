@@ -1,7 +1,15 @@
 CREATE COMPUTE MODULE PassThrough_Compute
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
+    DECLARE chave CHARACTER COALESCE(CAST(InputRoot.JSON.Data.orderId AS CHARACTER), '');
+
     SET OutputRoot = InputRoot;
+
+    -- [NOVO 1] Idempotencia: pedido ja processado vai intacto para APP.DUP (terminal out1)
+    IF chave <> '' AND jaProcessado(chave) THEN
+      PROPAGATE TO TERMINAL 'out1';
+      RETURN FALSE;
+    END IF;
 
     IF COALESCE(InputRoot.JSON.Data.forcarErro, '') = 'true' THEN
       THROW USER EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951
@@ -11,6 +19,20 @@ CREATE COMPUTE MODULE PassThrough_Compute
     SET OutputRoot.JSON.Data.processedBy = 'ACE-LAB';
     SET OutputRoot.JSON.Data.processedAt =
         CAST(CURRENT_GMTTIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SSSZZZ');
+
+    -- [NOVO 2] Marca como ULTIMO passo; a flag no Environment diz ao Catch
+    -- que foi ESTA mensagem que marcou (e so ela pode desmarcar)
+    IF chave <> '' THEN
+      CALL marcarProcessado(chave);
+      SET Environment.Idempotencia.chaveMarcada = chave;
+    END IF;
+
+    -- [NOVO 3] Gatilho do D2: falha DEPOIS da marca (simula falha no GravarSaida)
+    IF COALESCE(InputRoot.JSON.Data.forcarErroAposMarca, '') = 'true' THEN
+      THROW USER EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951
+            VALUES('Falha proposital apos a marca de idempotencia');
+    END IF;
+
     RETURN TRUE;
   END;
 END MODULE;
