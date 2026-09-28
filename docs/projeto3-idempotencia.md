@@ -22,7 +22,7 @@
 | D1 — deduplicação | OUT 1, DUP 1 | OUT 1 (99 bytes, processado), DUP 1 (29 bytes, original intacto); MsgId diferentes (`exp-d1-deduplicacao.txt`) |
 | D2a — falha após a marca, sem desmarcar | DUP 1, OUT 0, DLQ 0 (pedido legítimo perdido como duplicata) | DUP 1, OUT 0, DLQ 0; trace 1 linha (BOC 0); log termina em "Retentativa 1 de 3" e a 2ª entrega não deixa rastro (`exp-d2a-falha-apos-marca.txt`) |
 | D2b — com desmarcar condicionado | DLQ 1 com motivo, DUP 0 | trace 3 linhas; DLQ 1 com motivo (tentativas 3), DUP 0; reenvio sem gatilho processado (OUT 1) (`exp-d2b-desmarcar-no-catch.txt`) |
-| D3 — reinício do servidor | OUT 2 (memória perdida) | |
+| D3 — redeploy do flow | OUT 2 (memória perdida) | antes do redeploy: OUT 1, DUP 1 (controle); redeploy 02:49:46 (BIP2269I); depois: OUT 2 — a duplicata passou (`exp-d3-redeploy-apaga-marcas.txt`) |
 
 ## 6. Dívida de design e achados
 - **`APP.DUP` com `MAXDEPTH` padrão (5000).** Um produtor em laço enche a fila; o `GravarDuplicata` falha com `2053` (fila cheia), há rollback, e as duplicatas passam a ir para a `APP.BACKOUT` — a cadeia do exp E, por outra causa. Opções: `MAXDEPTH(50000)` como a `APP.IN`; alerta de profundidade (Projeto 7).
