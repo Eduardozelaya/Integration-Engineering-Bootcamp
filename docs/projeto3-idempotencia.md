@@ -23,3 +23,9 @@
 | D2a — falha após a marca, sem desmarcar | DUP 1, OUT 0, DLQ 0 (pedido legítimo perdido como duplicata) | DUP 1, OUT 0, DLQ 0; trace 1 linha (BOC 0); log termina em "Retentativa 1 de 3" e a 2ª entrega não deixa rastro (`exp-d2a-falha-apos-marca.txt`) |
 | D2b — com desmarcar condicionado | DLQ 1 com motivo, DUP 0 | |
 | D3 — reinício do servidor | OUT 2 (memória perdida) | |
+
+## 6. Dívida de design e achados
+- **`APP.DUP` com `MAXDEPTH` padrão (5000).** Um produtor em laço enche a fila; o `GravarDuplicata` falha com `2053` (fila cheia), há rollback, e as duplicatas passam a ir para a `APP.BACKOUT` — a cadeia do exp E, por outra causa. Opções: `MAXDEPTH(50000)` como a `APP.IN`; alerta de profundidade (Projeto 7).
+- **O `+passall` registra o usuário de origem.** Na `APP.DUP`, o ID do usuário é `mqm` (quem rodou o `amqsput`), não `app` (quem o ACE usa para conectar). Útil para auditoria; é também o motivo de o MQ separar `passall` de `put` (Projetos 6 e 11).
+- **A 2ª entrega do D2a não deixa rastro no log.** Ela não passa pelo Catch (sem trace) e não gera erro (sem log). Só a fila de auditoria prova que ela existiu, o que justifica a opção B com evidência.
+- **A marca não expira.** Sem TTL, a memória cresce enquanto o servidor estiver no ar.
