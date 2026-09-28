@@ -1,0 +1,44 @@
+# Exp D2a - falha apos a marca, SEM desmarcar no Catch | orderId=41 | 2026-09-27T23:22:03-03:00
+# previsao: DUP=1, OUT=0, DLQ=0; trace com 1 linha (BOC=0)
+     1 : DISPLAY QSTATUS(APP.IN) CURDEPTH IPPROCS
+   QUEUE(APP.IN)                           TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.OUT) CURDEPTH
+   QUEUE(APP.OUT)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(APP.DUP) CURDEPTH
+   QUEUE(APP.DUP)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     4 : DISPLAY QSTATUS(APP.DLQ) CURDEPTH
+   QUEUE(APP.DLQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     5 : DISPLAY QSTATUS(APP.BACKOUT) CURDEPTH
+   QUEUE(APP.BACKOUT)                      TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> PUT orderId=41 em 02:22:03.278 UTC
+===== estado final (previsao: DUP=1, OUT=0, DLQ=0, BACKOUT=0)
+     1 : DISPLAY QSTATUS(APP.IN) CURDEPTH
+   QUEUE(APP.IN)                           TYPE(QUEUE)
+   CURDEPTH(0)                          
+     2 : DISPLAY QSTATUS(APP.OUT) CURDEPTH
+   QUEUE(APP.OUT)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(APP.DUP) CURDEPTH
+   QUEUE(APP.DUP)                          TYPE(QUEUE)
+   CURDEPTH(1)                          
+     4 : DISPLAY QSTATUS(APP.DLQ) CURDEPTH
+   QUEUE(APP.DLQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     5 : DISPLAY QSTATUS(APP.BACKOUT) CURDEPTH
+   QUEUE(APP.BACKOUT)                      TYPE(QUEUE)
+   CURDEPTH(0)                          
+===== trace do Catch (previsao: 1 linha, BOC=0)
+2026-09-28 02:22:03.420888 BOC=0 orderId='41'
+===== APP.DUP
+  MsgId : X'414D5120514D312020202020202020202DC1B96A0B2C0040'
+  PutDate  : '20260928'    PutTime  : '02220327'
+ length - 58 of 58 bytes
+00000000:  7B22 6F72 6465 7249 6422 3A22 3431 222C           '{"orderId":"41",'
+00000010:  2276 616C 6F72 223A 3431 3030 2C22 666F           '"valor":4100,"fo'
+00000020:  7263 6172 4572 726F 4170 6F73 4D61 7263           'rcarErroAposMarc'
+00000030:  6122 3A22 7472 7565 227D                          'a":"true"}      '
