@@ -1,0 +1,35 @@
+# Exp D0 - linha de base: mesmo orderId enviado 2x | orderId=30 | 2026-09-25T11:27:22-03:00
+# flow sem deduplicacao; previsao: APP.OUT = 2
+     1 : DISPLAY QSTATUS(APP.IN) CURDEPTH IPPROCS
+   QUEUE(APP.IN)                           TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.OUT) CURDEPTH
+   QUEUE(APP.OUT)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(APP.DLQ) CURDEPTH
+   QUEUE(APP.DLQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     4 : DISPLAY QSTATUS(APP.BACKOUT) CURDEPTH
+   QUEUE(APP.BACKOUT)                      TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> PUT 1 orderId=30 em 14:27:22.889 UTC
+>>> PUT 2 orderId=30 em 14:27:23.998 UTC
+===== estado final (previsao: OUT=2)
+     1 : DISPLAY QSTATUS(APP.IN) CURDEPTH
+   QUEUE(APP.IN)                           TYPE(QUEUE)
+   CURDEPTH(0)                          
+     2 : DISPLAY QSTATUS(APP.OUT) CURDEPTH
+   QUEUE(APP.OUT)                          TYPE(QUEUE)
+   CURDEPTH(2)                          
+     3 : DISPLAY QSTATUS(APP.DLQ) CURDEPTH
+   QUEUE(APP.DLQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+===== conteudo de APP.OUT (so leitura)
+  MsgId : X'414D5120514D31202020202020202020967BB66A093D0040'
+  CorrelId : X'000000000000000000000000000000000000000000000000'
+  PutDate  : '20260925'    PutTime  : '14272288'
+00000000:  7B22 6F72 6465 7249 6422 3A22 3330 222C           '{"orderId":"30",'
+  MsgId : X'414D5120514D31202020202020202020967BB66A0C3D0040'
+  CorrelId : X'000000000000000000000000000000000000000000000000'
+  PutDate  : '20260925'    PutTime  : '14272398'
+00000000:  7B22 6F72 6465 7249 6422 3A22 3330 222C           '{"orderId":"30",'
