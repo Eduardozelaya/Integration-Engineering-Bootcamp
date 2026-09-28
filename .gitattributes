@@ -1,0 +1,9 @@
+# Fontes do ACE sao gravados pelo Toolkit (Windows) com CRLF; no repositorio ficam com LF
+*.msgflow     text eol=lf
+*.esql        text eol=lf
+*.policyxml   text eol=lf
+*.descriptor  text eol=lf
+*.xml         text eol=lf
+*.sh          text eol=lf
+*.mqsc        text eol=lf
+*.md          text eol=lf
