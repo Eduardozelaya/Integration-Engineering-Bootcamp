@@ -29,3 +29,4 @@
 - **O `+passall` registra o usuário de origem.** Na `APP.DUP`, o ID do usuário é `mqm` (quem rodou o `amqsput`), não `app` (quem o ACE usa para conectar). Útil para auditoria; é também o motivo de o MQ separar `passall` de `put` (Projetos 6 e 11).
 - **A 2ª entrega do D2a não deixa rastro no log.** Ela não passa pelo Catch (sem trace) e não gera erro (sem log). Só a fila de auditoria prova que ela existiu, o que justifica a opção B com evidência.
 - **A marca não expira.** Sem TTL, a memória cresce enquanto o servidor estiver no ar.
+- **Um deploy de qualquer flow da application apaga as marcas.** O deploy do `ConsultarPedido` (request/reply) reiniciou também o `PassThrough`, que está na mesma application `OrderProcessing`. A janela do D3 abre mesmo quando o flow com a deduplicação não mudou.

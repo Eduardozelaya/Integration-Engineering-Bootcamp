@@ -1,0 +1,61 @@
+# Exp R1 - correlacao (CorrelId x MsgId) e resposta orfa | orderId=71 | 2026-09-28T23:18:41-03:00
+# previsao: requisicao MsgType 1 e ReplyToQ APP.REPLY; resposta MsgType 2 com CorrelId = MsgId da requisicao; resposta fica orfa
+>>> parando o flow ConsultarPedido em 02:18:41.466 UTC
+HTTP 200
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH IPPROCS
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(0)
+     2 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> requisicao em 02:18:45.146 UTC (o amqsreq vai esperar 15 s e desistir)
+Sample AMQSREQ0 start
+server queue is APP.REQ
+replies to APP.REPLY
+no more replies
+Sample AMQSREQ0 end
+<<< requisitante desistiu em 02:19:45.257 UTC
+===== a requisicao parada na APP.REQ (so leitura)
+  Report   : 50331648  MsgType : 1
+  Expiry   : -1  Feedback : 0
+  MsgId : X'414D5120514D312020202020202020209708BB6A062F0040'
+  CorrelId : X'000000000000000000000000000000000000000000000000'
+  ReplyToQ       : 'APP.REPLY                                       '
+00000000:  7B22 6F72 6465 7249 6422 3A22 3731 227D           '{"orderId":"71"}'
+>>> religando o flow em 02:20:11.152 UTC
+HTTP 200
+===== filas (previsao: REQ=0, REPLY=1 - resposta orfa)
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH IPPROCS
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(1)                          
+===== a resposta orfa na APP.REPLY (so leitura)
+  Report   : 0  MsgType : 2
+  Expiry   : -1  Feedback : 0
+  MsgId : X'414D5120514D312020202020202020209708BB6A01370040'
+  CorrelId : X'414D5120514D312020202020202020209708BB6A062F0040'
+ length - 83 of 83 bytes
+00000000:  7B22 6F72 6465 7249 6422 3A22 3731 222C           '{"orderId":"71",'
+00000010:  2273 7461 7475 7322 3A22 5245 4345 4249           '"status":"RECEBI'
+00000020:  444F 222C 2272 6573 706F 6E64 6964 6F45           'DO","respondidoE'
+00000030:  6D22 3A22 3230 3236 2D30 392D 3239 5430           'm":"2026-09-29T0'
+00000040:  323A 3230 3A31 322E 3034 372B 3030 3A30           '2:20:12.047+00:0'
+00000050:  3022 7D                                           '0"}             '
+===== comparacao
+MsgId da requisicao:  X'414D5120514D312020202020202020209708BB6A062F0040'
+CorrelId da resposta: X'414D5120514D312020202020202020209708BB6A062F0040'
+MsgId da resposta:    X'414D5120514D312020202020202020209708BB6A01370040'
+>>> CorrelId da resposta = MsgId da requisicao (MQRO_COPY_MSG_ID_TO_CORREL_ID, padrao)
+>>> a resposta tem MsgId proprio (MQRO_NEW_MSG_ID, padrao), mesmo com o MQMD copiado no Compute
+# Report da requisicao 50331648 = 0x03000000 = MQRO_EXCEPTION_WITH_DATA (sem opcoes de MsgId/CorrelId -> valem os padroes)
+# amqsreq: espera ate 60 s pela 1a resposta (02:18:45 -> 02:19:45), 15 s pelas seguintes
+===== comparacao
+MsgId da requisicao:  X'414D5120514D312020202020202020209708BB6A062F0040'
+CorrelId da resposta: X'414D5120514D312020202020202020209708BB6A062F0040'
+MsgId da resposta:    X'414D5120514D312020202020202020209708BB6A01370040'
+>>> CorrelId da resposta = MsgId da requisicao (MQRO_COPY_MSG_ID_TO_CORREL_ID, padrao)
+>>> a resposta tem MsgId proprio (MQRO_NEW_MSG_ID, padrao), mesmo com o MQMD copiado no Compute
+# Report da requisicao 50331648 = 0x03000000 = MQRO_EXCEPTION_WITH_DATA (sem opcoes de MsgId/CorrelId -> valem os padroes)
+# amqsreq: espera ate 60 s pela 1a resposta (02:18:45 -> 02:19:45), 15 s pelas seguintes
