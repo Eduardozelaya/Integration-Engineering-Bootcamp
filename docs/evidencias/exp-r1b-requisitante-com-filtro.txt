@@ -1,0 +1,22 @@
+# Exp R1b - requisitante que filtra pelo CorrelId (API REST de mensagens do MQ) | orderId=73 | 2026-09-28T23:44:57-03:00
+# previsao: com filtro recebe a resposta do 73 e a isca fica; sem filtro recebe a isca
+>>> plantando a isca (resposta falsa, sem CorrelId) em 02:44:57.025 UTC
+HTTP 201
+>>> requisicao do pedido 73 em 02:44:57.237 UTC
+HTTP 201
+MsgId da requisicao: ID:414d5120514d312020202020202020209708bb6a053f0040
+===== fila de respostas antes de ler (previsao: 2 - a isca e a resposta do 73)
+     1 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(2)                          
+===== leitura COM filtro pelo CorrelId (previsao: a resposta do 73)
+{"orderId":"73","status":"RECEBIDO","respondidoEm":"2026-09-29T02:44:57.286+00:00"}
+HTTP 200
+CorrelId recebido: ID:414d5120514d312020202020202020209708bb6a053f0040
+===== fila de respostas depois (previsao: 1 - a isca ficou)
+     1 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(1)                          
+===== contraprova: leitura SEM filtro (previsao: a isca - o que o amqsreq teria recebido)
+{"orderId":"ISCA"}
+HTTP 200
