@@ -6,6 +6,10 @@ CREATE COMPUTE MODULE ConsultarPedido_MontarResposta
 		    -- O MQReply precisa do MQMD da requisicao: e dele que vem o ReplyToQ
 		    SET OutputRoot.Properties = InputRoot.Properties;
 		    SET OutputRoot.MQMD       = InputRoot.MQMD;
+		    
+		    -- Resposta de consulta so vale enquanto alguem espera: 300 decimos de segundo = 30 s.
+		    -- Sem isto, a resposta a um requisitante que desistiu fica orfa para sempre (exp R1).
+		    SET OutputRoot.MQMD.Expiry = 300;
 		
 		    SET OutputRoot.JSON.Data.orderId      = InputRoot.JSON.Data.orderId;
 		    SET OutputRoot.JSON.Data.status       = 'RECEBIDO';

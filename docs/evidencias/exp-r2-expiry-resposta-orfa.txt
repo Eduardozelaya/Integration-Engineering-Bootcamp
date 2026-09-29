@@ -1,0 +1,52 @@
+# Exp R2 - resposta com Expiry 300 (30 s); controle: orfa do R1 com Expiry -1 | orderId=72 | 2026-09-28T23:37:39-03:00
+# previsao: REPLY=2 apos a resposta; 40 s depois ainda 2 (expiracao preguicosa); a leitura mostra so a 71; depois REPLY=1
+===== estado inicial (esperado: REQ=0, REPLY=1 - a orfa do R1)
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH IPPROCS
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(1)                          
+>>> parando o flow em 02:37:39.479 UTC
+HTTP 200
+>>> requisicao em 02:37:42.994 UTC (o amqsreq vai desistir em 60 s)
+Sample AMQSREQ0 start
+server queue is APP.REQ
+replies to APP.REPLY
+MQGET ended with reason code 2079
+response <{"orderId":"71","status":"RECEBIDO","respondidoEm":"2026-09-29T0>
+no more replies
+Sample AMQSREQ0 end
+<<< requisitante desistiu em 02:37:58.171 UTC
+>>> religando o flow em 02:37:58.173 UTC
+HTTP 200
+===== logo apos a resposta 72 (previsao: REPLY=2)
+     1 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(1)                          
+===== as duas orfas (previsao: 71 com Expiry -1; 72 com Expiry perto de 300)
+  Expiry   : 275  Feedback : 0
+  PutDate  : '20260929'    PutTime  : '02374315'
+00000000:  7B22 6F72 6465 7249 6422 3A22 3732 222C           '{"orderId":"72",'
+>>> esperando 40 s a partir de 02:38:01.590 UTC
+===== 40 s depois, ANTES de ler (previsao: ainda 2 - expiracao preguicosa)
+     1 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(1)                          
+===== leitura (previsao: so a 71 aparece)
+===== logo apos a leitura (previsao: 1)
+     1 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(0)                          
+
+# ===== ANALISE
+# ACHADO PRINCIPAL: a requisicao do pedido 72 recebeu como resposta a ORFA do pedido 71 (do R1).
+#   O flow estava parado: a resposta do 72 ainda nem existia. O amqsreq leu a primeira mensagem
+#   da APP.REPLY SEM filtrar pelo CorrelId. Em producao: resposta errada para o requisitante errado
+#   (vazamento entre clientes), sem erro. A correlacao so funciona se o REQUISITANTE ler com
+#   MQMO_MATCH_CORREL_ID. O R0 funcionou por coincidencia: a fila de respostas estava vazia.
+# EXPIRY: a resposta 72 saiu com Expiry 275 (300 - 2,5 s): o MQReply respeitou o Expiry do Compute.
+# EXPIRACAO PREGUICOSA: 40 s depois (ja expirada) a APP.REPLY ainda tinha CURDEPTH 1; a leitura
+#   nao mostrou nenhuma mensagem; logo depois, CURDEPTH 0. A expirada so e removida quando alguem
+#   tenta le-la.
+# CONTROLE PERDIDO: a orfa do 71 (Expiry -1) era o controle e foi consumida pelo amqsreq.
