@@ -51,11 +51,3 @@ MsgId da resposta:    X'414D5120514D312020202020202020209708BB6A01370040'
 >>> a resposta tem MsgId proprio (MQRO_NEW_MSG_ID, padrao), mesmo com o MQMD copiado no Compute
 # Report da requisicao 50331648 = 0x03000000 = MQRO_EXCEPTION_WITH_DATA (sem opcoes de MsgId/CorrelId -> valem os padroes)
 # amqsreq: espera ate 60 s pela 1a resposta (02:18:45 -> 02:19:45), 15 s pelas seguintes
-===== comparacao
-MsgId da requisicao:  X'414D5120514D312020202020202020209708BB6A062F0040'
-CorrelId da resposta: X'414D5120514D312020202020202020209708BB6A062F0040'
-MsgId da resposta:    X'414D5120514D312020202020202020209708BB6A01370040'
->>> CorrelId da resposta = MsgId da requisicao (MQRO_COPY_MSG_ID_TO_CORREL_ID, padrao)
->>> a resposta tem MsgId proprio (MQRO_NEW_MSG_ID, padrao), mesmo com o MQMD copiado no Compute
-# Report da requisicao 50331648 = 0x03000000 = MQRO_EXCEPTION_WITH_DATA (sem opcoes de MsgId/CorrelId -> valem os padroes)
-# amqsreq: espera ate 60 s pela 1a resposta (02:18:45 -> 02:19:45), 15 s pelas seguintes
