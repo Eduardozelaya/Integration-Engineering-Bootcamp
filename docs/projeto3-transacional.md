@@ -347,3 +347,4 @@ O segundo ponto responde a *"como promover de dev para prod sem alterar o BAR?"*
 - [ ] Pub/sub em `APP.EVENTS`, com assinatura durável e não durável.
 - [ ] **Teste final:** 100 mensagens, 30% com erro; soma das filas fechando, zero duplicatas, três execuções seguidas.
 - [ ] Tuning com `Additional instances`: throughput e perda de ordenação.
+- [ ] **F2:** amostrar `UNCOM` durante as retentativas e derrubar o consumidor com a transação aberta: prova o rollback implícito e mostra se o intervalo de ~1 s ocorre dentro ou fora da transação.

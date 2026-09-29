@@ -234,6 +234,7 @@ Na reimplantação, o `BIP9339W` (policy sem mudança) é esperado e inofensivo.
 - **`CONNAME(172.18.0.1)`** é o gateway da bridge do Docker. Todo cliente do Windows aparece com esse endereço, então CHLAUTH por endereço não distingue o ACE (Projeto 11).
 - **O log não registra o código do MQ** quando um `MQOutput` falha no Catch: registra `BIP2232E` no node. O texto "Retentativa N" só é logado para N = 1. **Conte tentativas pelos `BIP2232E` ou pelo trace.**
 - **Dois relógios:** o trace (Windows) e o `PutTime` (container) diferem alguns milissegundos. Diferenças abaixo de ~10 ms entre máquinas não têm significado.
+- **O flow consome antes do `BIP1991I`.** No exp F, a mensagem parada foi processada 114 ms antes do "servidor concluiu a inicialização" (mesmo relógio). Esperar o `BIP1991I` não garante que nada foi processado: o consumo começa no `BIP2269I` do flow.
 
 ### Diagnóstico padrão
 
