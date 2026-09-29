@@ -1,0 +1,23 @@
+# Exp R0 - request/reply, caminho feliz | 2026-09-28T23:16:17-03:00
+# previsao: o amqsreq recebe a resposta com status RECEBIDO; filas vazias no fim
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH IPPROCS
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> requisicao em 02:16:17.245 UTC
+Sample AMQSREQ0 start
+server queue is APP.REQ
+replies to APP.REPLY
+MQGET ended with reason code 2079
+response <{"orderId":"70","status":"RECEBIDO","respondidoEm":"2026-09-29T0>
+no more replies
+Sample AMQSREQ0 end
+<<< fim da espera em 02:16:32.382 UTC
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     2 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(0)                          

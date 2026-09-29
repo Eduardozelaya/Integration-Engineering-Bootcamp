@@ -1,0 +1,16 @@
+
+
+CREATE COMPUTE MODULE ConsultarPedido_MontarResposta
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		    -- O MQReply precisa do MQMD da requisicao: e dele que vem o ReplyToQ
+		    SET OutputRoot.Properties = InputRoot.Properties;
+		    SET OutputRoot.MQMD       = InputRoot.MQMD;
+		
+		    SET OutputRoot.JSON.Data.orderId      = InputRoot.JSON.Data.orderId;
+		    SET OutputRoot.JSON.Data.status       = 'RECEBIDO';
+		    SET OutputRoot.JSON.Data.respondidoEm =
+		        CAST(CURRENT_GMTTIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SSSZZZ');
+		    RETURN TRUE;
+	END;
+END MODULE;
