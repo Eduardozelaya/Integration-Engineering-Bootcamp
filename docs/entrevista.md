@@ -94,9 +94,9 @@ No laboratório, todos os efeitos do flow são gravações em fila na mesma unid
 | retenção sob syncpoint e desvio para a backout | `docs/evidencias/exp-a-transacao-yes.txt` |
 | sem syncpoint, a mensagem se perde | `docs/evidencias/exp-b-transacao-no.txt`, `exp-b2-*` |
 | retentativa e DLQ com motivo pelo Catch | `docs/evidencias/exp-c2-*` |
-| **queda real do consumidor** (rollback implícito, BOC preservado através da queda) | **pendente: experimento F** |
+| queda real do consumidor: mensagem e `BackoutCount` preservados através da queda; DLQ só após a 3ª tentativa contada desde antes da queda | `docs/evidencias/exp-f-queda-do-consumidor.txt` |
 
-**Lacuna:** todos os experimentos acima provocam **erros de processamento**. Nenhum derruba o consumidor de verdade. O experimento F (`taskkill /F` no integration server com uma mensagem em retentativa) fecha essa prova.
+**Lacuna restante:** no exp F, a queda ocorreu 355 ms após a 2ª entrega, provavelmente com a transação já encerrada. Ele prova que a mensagem e o contador sobrevivem à queda, mas não distingue um rollback implícito de uma transação aberta. Pendente: F2 (capturar `UNCOM` no instante da queda).
 
 ---
 
