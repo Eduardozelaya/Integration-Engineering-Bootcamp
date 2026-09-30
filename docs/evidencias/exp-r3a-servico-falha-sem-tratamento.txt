@@ -50,3 +50,38 @@ HTTP 200
 #   Alerta certo para o Projeto 7: idade da mensagem mais antiga, nao profundidade nem log.
 # CAUSA: a APP.REQ foi criada copiando a linha da APP.REPLY no queues.mqsc; herdou a falta de
 #   BOTHRESH/BOQNAME. Fila de resposta nao precisa; fila de entrada de servico precisa.
+
+# ===== CORRECAO DA ANALISE (30/09) - a analise acima esta errada
+# ----- log do servidor (UTC)
+2026-09-30 01:59:52.478744Z: [Thread 10436] (Msg 1/4) BIP2628W: Condição de exceção detectada no nó de entrada 'ConsultarPedido.LerRequisicao'. 
+2026-09-30 01:59:52.484452Z: [Thread 10436] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'ConsultarPedido.MontarResposta'. 
+2026-09-30 01:59:52.489840Z: [Thread 10436] (Msg 3/4) BIP2488E:  (.ConsultarPedido_MontarResposta.Main, 13.9) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951 VALUES('Falha pr
+2026-09-30 01:59:52.500172Z: [Thread 10436] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Falha proposital no ConsultarPedido' 'ConsultarPedido.MontarResposta' '{2}' '{3}' '{4}' '{5}' '{6}
+2026-09-30 01:59:53.479216Z: [Thread 10436] (Msg 1/1) BIP2648E: Mensagem restaurada para uma fila: nó do fluxo de mensagens 'ConsultarPedido.LerRequisicao'. 
+2026-09-30 01:59:53.492016Z: [Thread 10436] (Msg 1/1) BIP2612E: Não é possível abrir a fila de mensagens não entregues do IBM MQ: gerenciador de filas='QM1'; fila='DEV.DEAD.LETTER.QUEUE'; MQCC=2; MQRC=2035; 'ConsultarPedido.Le
+2026-09-30 02:00:16.003250Z: [Thread 13896] (Msg 1/1) BIP2271I: Recurso implementado 'ConsultarPedido' (uuid='ConsultarPedido',tipo='MessageFlow') interrompido com êxito. 
+# ----- lado do queue manager (AMQERR01.LOG)
+                    CommentInsert1(app)
+                    CommentInsert2(DEV.DEAD.LETTER.QUEUE [queue])
+                    CommentInsert3(passall)
+
+AMQ8077W: Entity 'app' has insufficient authority to access object
+DEV.DEAD.LETTER.QUEUE [queue].
+
+EXPLANATION:
+The specified entity is not authorized to access the required object. The
+following requested permissions are unauthorized: passall
+ACTION:
+Ensure that the correct level of authority has been set for this entity against
+# recusas na DEADQ registradas: 21
+# ----- permissoes do app na DEADQ
+# ----- interpretacao corrigida
+# 1) a 1a tentativa falhou (BIP2628W); 2) 1 s depois, na 2a entrega, o MQInput tentou desviar (BIP2648E);
+# 3) sem BOQNAME, foi para a DEADQ do QM; 4) a DEADQ recusou com MQRC 2035 (AMQ8077W): faltou passall.
+#    O app tem 'get browse put inq' no perfil DEV.** (imagem de desenvolvedor), sem as permissoes de contexto.
+#    Mesma causa do erro 5 de 18/09 (+passall no APP.**), agora na DEADQ, fora do perfil APP.**.
+# 5) rollback e nova tentativa de desvio, 1 por segundo.
+# BackoutCount 21 = 1 execucao do flow + 20 desvios recusados. A 21a recusa ocorreu entre a leitura e o freio.
+# O '1 erro no log do ACE' era real: o flow rodou 1 vez. O AMQERR01.LOG registra cada tentativa.
+# BOTHRESH(0) desvia ja na 2a entrega. O laco veio da falta de permissao no destino do desvio.
+# A previsao 'vai para a DEADQ' estava certa quanto ao mecanismo.
