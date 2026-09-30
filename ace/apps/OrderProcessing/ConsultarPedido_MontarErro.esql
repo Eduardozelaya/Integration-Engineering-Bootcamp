@@ -1,0 +1,34 @@
+CREATE COMPUTE MODULE ConsultarPedido_MontarErro
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		    -- Extrai o erro mais interno do ExceptionList (mesma logica do TratarFalha)
+		    DECLARE ex REFERENCE TO InputExceptionList.*[1];
+		    DECLARE codigo  INTEGER;
+		    DECLARE texto   CHARACTER;
+		    DECLARE detalhe CHARACTER;
+		    WHILE LASTMOVE(ex) DO
+		      IF ex.Number IS NOT NULL THEN
+		        SET codigo = ex.Number;
+		        SET texto  = ex.Text;
+		        IF EXISTS(ex.Insert[]) THEN
+		          SET detalhe = ex.Insert[<].Text;
+		        END IF;
+		      END IF;
+		      MOVE ex LASTCHILD;
+		    END WHILE;
+		
+		    -- O MQReply precisa do MQMD da requisicao (ReplyToQ); a resposta de erro tambem expira
+		    SET OutputRoot.Properties  = InputRoot.Properties;
+		    SET OutputRoot.MQMD        = InputRoot.MQMD;
+		    SET OutputRoot.MQMD.Expiry = 300;
+		
+		    SET OutputRoot.JSON.Data.orderId          = InputRoot.JSON.Data.orderId;
+		    SET OutputRoot.JSON.Data.status           = 'ERRO';
+		    SET OutputRoot.JSON.Data.motivo.codigo    = codigo;
+		    SET OutputRoot.JSON.Data.motivo.mensagem  = texto;
+		    SET OutputRoot.JSON.Data.motivo.detalhe   = detalhe;
+		    SET OutputRoot.JSON.Data.respondidoEm     =
+		        CAST(CURRENT_GMTTIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SSSZZZ');
+		    RETURN TRUE;
+	END;
+END MODULE;

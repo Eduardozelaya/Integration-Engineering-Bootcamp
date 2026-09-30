@@ -1,0 +1,48 @@
+# Exp R3b - Catch do LerRequisicao responde com erro (MontarErro -> ResponderErro) | orderId=76 | 2026-09-30T11:53:04-03:00
+# previsao: 1) requisitante recebe mensagem de erro com pista do motivo | 2) requisicao termina na APP.REQ.BACKOUT | 3) causa do erro no log do servidor e na resposta da API
+===== portao
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH IPPROCS
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(APP.REQ.BACKOUT) CURDEPTH
+   QUEUE(APP.REQ.BACKOUT)                  TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> requisicao com forcarErro em 14:53:04.825 UTC
+HTTP 201
+===== 1) o requisitante le com filtro pelo CorrelId (espera ate 10 s)
+{"orderId":"76","status":"ERRO","motivo":{"codigo":2951,"mensagem":"User generated exception","detalhe":"Falha proposital no ConsultarPedido"},"respondidoEm":"2026-09-30T14:53:05.024+00:00"}
+HTTP 200
+<<< tempo entre o envio e a resposta: 297 ms
+===== 2) onde a requisicao terminou
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     2 : DISPLAY QSTATUS(APP.REQ.BACKOUT) CURDEPTH
+   QUEUE(APP.REQ.BACKOUT)                  TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(0)                          
+===== 3) linhas novas no log do servidor durante o experimento
+(total de linhas novas: 0)
+===== controle: consulta SEM erro (esperado: HTTP 200 com status RECEBIDO)
+HTTP 201
+{"orderId":"77","status":"RECEBIDO","respondidoEm":"2026-09-30T14:53:08.287+00:00"}
+HTTP 200
+
+# ===== ANALISE
+# 1) CERTO: o requisitante recebeu HTTP 200 com status ERRO e o motivo (codigo 2951, detalhe) em 297 ms.
+#    Antes (R3a, R3a'): HTTP 204 apos 10 s, sem saber o motivo.
+# 2) ERRADO: a requisicao NAO foi para a APP.REQ.BACKOUT. APP.REQ 0, APP.REQ.BACKOUT 0.
+#    O MontarErro termina normalmente -> commit -> a leitura e confirmada e a requisicao sai da fila.
+#    Sem rollback, o BackoutCount nao sobe e o BOTHRESH(3) nao e atingido.
+# 3) API: CERTO (motivo completo na resposta). LOG: ERRADO, 0 linhas novas.
+#    O BIP2628W so e registrado quando a excecao chega ao no de entrada SEM ser resolvida.
+#    Com o Catch resolvendo, para o ACE nao houve erro.
+# LACUNA 1: a requisicao que falhou desapareceu. Nenhuma fila guarda o original; a resposta leva so orderId e motivo.
+# LACUNA 2: erro tratado e invisivel no log. Um servico falhando em 100% das consultas mostraria 0 erros.
+# REGRA: tratar erro nao pode significar esconder. Caminho de erro completo: responder + guardar o original + registrar.
+# CONTROLE: consulta sem erro (orderId 77) -> HTTP 200, status RECEBIDO. Caminho feliz intacto.
