@@ -1,0 +1,66 @@
+# Exp R3c - caminho de erro responde, guarda o original (APP.REQ.ERRO) e registra (trace) | orderId=78 | 2026-09-30T12:25:53-03:00
+# previsao: 1) nada muda para o requisitante | 2) segue igual, agora encaminha para a fila nova | 3) info e auditoria disponiveis | 4) (nao testada)
+===== portao
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH IPPROCS
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.REQ.BACKOUT) CURDEPTH
+   QUEUE(APP.REQ.BACKOUT)                  TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(APP.REQ.ERRO) CURDEPTH
+   QUEUE(APP.REQ.ERRO)                     TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> requisicao com forcarErro em 15:25:53.860 UTC
+HTTP 201
+===== 1) o requisitante (le com filtro, ate 10 s)
+{"orderId":"78","status":"ERRO","motivo":{"codigo":2951,"mensagem":"User generated exception","detalhe":"Falha proposital no ConsultarPedido"},"respondidoEm":"2026-09-30T15:25:53.960+00:00"}
+HTTP 200
+<<< tempo entre o envio e a resposta: 133 ms
+===== 2) onde a requisicao foi parar
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                          
+     2 : DISPLAY QSTATUS(APP.REQ.BACKOUT) CURDEPTH
+   QUEUE(APP.REQ.BACKOUT)                  TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(APP.REQ.ERRO) CURDEPTH
+   QUEUE(APP.REQ.ERRO)                     TYPE(QUEUE)
+   CURDEPTH(1)                          
+----- MQMD da mensagem de auditoria (previsao do desenho: MsgType 8, Expiry -1)
+  Report   : 0  MsgType : 8
+  Expiry   : -1  Feedback : 0
+  PutApplName    : 'IBM MQ REST API             '
+ length - 298 of 298 bytes
+----- conteudo da auditoria
+{"original":{"orderId":"78","forcarErro":"true"},"erro":{"codigo":2951,"mensagem":"User generated exception","detalhe":"Falha proposital no ConsultarPedido","flow":"ConsultarPedido","falhouEm":"2026-09-30T15:25:53.960+00:00","msgIdRequisicao":"X'414d5120514d31202020202020202020a667bc6a02430040'"}}
+===== 3) o registro
+----- trace (consulta-erros.txt)
+2026-09-30 15:25:53.958383 ERRO flow=ConsultarPedido BOC=0 orderId='78'
+----- linhas novas no log do servidor: 0
+===== 4) correlacao: MsgId do requisitante x msgIdRequisicao na auditoria
+requisitante: 414D5120514D31202020202020202020A667BC6A02430040
+auditoria:    
+>>> DIFERENTES ou vazio
+===== controle: consulta SEM erro (esperado: RECEBIDO; auditoria e trace inalterados)
+HTTP 201
+{"orderId":"79","status":"RECEBIDO","respondidoEm":"2026-09-30T15:25:57.607+00:00"}
+HTTP 200
+     1 : DISPLAY QSTATUS(APP.REQ.ERRO) CURDEPTH
+   QUEUE(APP.REQ.ERRO)                     TYPE(QUEUE)
+   CURDEPTH(1)                          
+linhas do trace para o 79: 0   (esperado: 0)
+
+# ===== CORRECAO DO BLOCO 4 (o script falhou, nao o flow)
+# O CAST do ESQL grava o MsgId em hexadecimal MINUSCULO (X'414d...'); o filtro procurava so [0-9A-F].
+# Comparacao normalizada (maiusculas, sem prefixo):
+#   requisitante: 414D5120514D31202020202020202020A667BC6A02430040
+#   auditoria:    414D5120514D31202020202020202020A667BC6A02430040
+# IGUAIS: a auditoria aponta para a requisicao certa
+# ===== ANALISE
+# 1) requisitante: HTTP 200, status ERRO com motivo, 133 ms. Previsao 'nada muda': certa.
+# 2) APP.REQ.ERRO 1, APP.REQ.BACKOUT 0: a requisicao que falhou ficou guardada com o motivo. Previsao: certa.
+#    MQMD da auditoria: MsgType 8 (datagrama), Expiry -1. PutApplName 'IBM MQ REST API' = quem ENVIOU (passall).
+# 3) trace: 1 linha (ERRO flow=ConsultarPedido BOC=0 orderId='78'), 2 ms antes da resposta. Log do servidor: 0.
+# CONTROLE: consulta sem erro -> RECEBIDO; auditoria continua 1; 0 linhas do 79 no trace.
+# SERIE R3: responder + guardar + registrar, na mesma unidade de trabalho. Tratar erro nao e esconder.
+# TRES FORMATOS DO MESMO MsgId: amqsbcg X'414D...' | API REST ID:414d... | CAST do ESQL X'414d...'
