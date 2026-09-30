@@ -1,0 +1,52 @@
+# Exp R3a - servico falha sempre, sem tratamento; APP.REQ com BOTHRESH(0) e sem BOQNAME | orderId=74 | 2026-09-29T22:59:50-03:00
+# pergunta: o que o requisitante ve? o que acontece com a requisicao que falha?
+===== estado inicial
+     1 : DISPLAY QSTATUS(APP.REQ) CURDEPTH IPPROCS
+   QUEUE(APP.REQ)                          TYPE(QUEUE)
+   CURDEPTH(0)                             IPPROCS(1)
+     2 : DISPLAY QSTATUS(APP.REPLY) CURDEPTH
+   QUEUE(APP.REPLY)                        TYPE(QUEUE)
+   CURDEPTH(0)                          
+     3 : DISPLAY QSTATUS(DEV.DEAD.LETTER.QUEUE) CURDEPTH
+   QUEUE(DEV.DEAD.LETTER.QUEUE)            TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> requisicao com forcarErro em 01:59:50.737 UTC
+HTTP 201
+MsgId: ID:414d5120514d31202020202020202020a667bc6a022e0040
+===== o requisitante espera a resposta com filtro, ate 10 s
+
+HTTP 204
+<<< requisitante desistiu em 02:00:02.694 UTC
+===== APP.REQ nos 10 s seguintes
+02:00:02  CURDEPTH(1)
+02:00:03  CURDEPTH(1)
+02:00:04  CURDEPTH(1)
+02:00:06  CURDEPTH(1)
+02:00:07  CURDEPTH(1)
+02:00:08  CURDEPTH(1)
+02:00:09  CURDEPTH(1)
+02:00:10  CURDEPTH(1)
+02:00:11  CURDEPTH(1)
+02:00:12  CURDEPTH(1)
+===== falhas registradas no log durante o experimento: 1
+===== a requisicao (so leitura; BackoutCount = quantas vezes foi revertida)
+  BackoutCount : 21
+00000000:  7B22 6F72 6465 7249 6422 3A22 3734 222C           '{"orderId":"74",'
+===== DEADQ
+     1 : DISPLAY QSTATUS(DEV.DEAD.LETTER.QUEUE) CURDEPTH
+   QUEUE(DEV.DEAD.LETTER.QUEUE)            TYPE(QUEUE)
+   CURDEPTH(0)                          
+>>> FREIO: parando o flow em 02:00:14.033 UTC
+HTTP 200
+
+# ===== ANALISE
+# RESULTADO: laco infinito. BOTHRESH(0) = sem limite: a requisicao nunca sai da APP.REQ.
+#   BackoutCount 21 em ~22 s (PUT 01:59:50 -> leitura ~02:00:13): 1 rollback por segundo,
+#   o mesmo intervalo de ~1 s dos experimentos A, C2 e E.
+# REQUISITANTE: HTTP 204 apos a espera de 10 s. Nao recebe nada e nao sabe o motivo.
+# LOG: 1 falha registrada para 21 rollbacks. O ACE nao repete o registro de falha igual.
+# MENSAGEM ENVENENADA INVISIVEL: profundidade 1 (parece normal), 1 erro no log (parece isolado),
+#   DEADQ e backout vazias. So o BackoutCount (ou a idade da mensagem, MSGAGE) denuncia.
+#   Alerta certo para o Projeto 7: idade da mensagem mais antiga, nao profundidade nem log.
+# CAUSA: a APP.REQ foi criada copiando a linha da APP.REPLY no queues.mqsc; herdou a falta de
+#   BOTHRESH/BOQNAME. Fila de resposta nao precisa; fila de entrada de servico precisa.
