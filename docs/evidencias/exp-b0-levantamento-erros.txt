@@ -1,0 +1,70 @@
+# Exp B0 - levantamento: o que o PassThrough faz hoje com 3 tipos de erro | 2026-10-03T17:00:41-03:00
+# previsao: ver docs/log.md, linha de 02/10
+
+=================== M1 - JSON quebrado
+>>> payload: {"orderId":   em 20:00:42.636 UTC
+    1 DISPLAY
+    CURDEPTH(0) :
+    QUEUE(APP.OUT) CURDEPTH(0)
+    3 DISPLAY
+    CURDEPTH(1) :
+    QUEUE(APP.BACKOUT) CURDEPTH(0)
+    5 DISPLAY
+    CURDEPTH(0) 
+--- conteudo de APP.DLQ: {"original":{},"erro":{"codigo":5702,"mensagem":"The JSON parser reached the end of the bitstream whilst parsing the JSON document","detalhe":"\"[\", \"{\", \"value\"","tentativas":3,"flow":"PassThrough","falhouEm":"2026-10-03T20:00:45.556+00:00"}}
+--- linhas novas no trace do Catch: 3
+2026-10-03 20:00:43.574086 BOC=0 orderId=NULL
+2026-10-03 20:00:44.543196 BOC=1 orderId=NULL
+2026-10-03 20:00:45.555872 BOC=2 orderId=NULL
+--- linhas novas no log do servidor: 16
+2026-10-03 20:00:43.592088Z: [Thread 6800] (Msg 1/6) BIP2232E: Erro detectado ao manipular um erro anterior no nó 'PassThrough.TratarFalha'. 
+2026-10-03 20:00:43.605120Z: [Thread 6800] (Msg 2/6) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.ProcessarPedido'. 
+2026-10-03 20:00:43.612196Z: [Thread 6800] (Msg 3/6) BIP2488E:  (.PassThrough_Compute.Main, 3.5) Detectado erro ao executar a instrução SQL 'DECLARE chave CHARACTER COALESCE(CAST(InputRoot.JSON.Data
+2026-10-03 20:00:43.620804Z: [Thread 6800] (Msg 4/6) BIP2498E: (.PassThrough_Compute.Main, 3.43) : Ocorreu um erro ao navegar para o elemento do caminho '4' da referência de campo no local fornecido.
+2026-10-03 20:00:43.631280Z: [Thread 6800] (Msg 5/6) BIP5705E: Erros de análise JSON ocorreram. 
+2026-10-03 20:00:43.636560Z: [Thread 6800] (Msg 6/6) BIP5702E: Ocorreu um erro de análise JSON. O final do fluxo de bits foi atingido antes da conclusão da mensagem.  O analisador JSON estava espera
+2026-10-03 20:00:43.654440Z: [Thread 6800] (Msg 1/4) BIP2628W: Condição de exceção detectada no nó de entrada 'PassThrough.LerPedido'. 
+2026-10-03 20:00:43.661020Z: [Thread 6800] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.TratarFalha'. 
+2026-10-03 20:00:43.667636Z: [Thread 6800] (Msg 3/4) BIP2488E:  (.PassThrough_TratarFalha.Main, 14.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE
+2026-10-03 20:00:43.685752Z: [Thread 6800] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Retentativa 1 de 3' 'PassThrough.TratarFalha' '{2}' '{3}' '{4}' '{5}'
+
+=================== M2 - sem orderId
+>>> payload: {"valor":100}   em 20:00:50.148 UTC
+    1 DISPLAY
+    CURDEPTH(0) :
+    QUEUE(APP.OUT) CURDEPTH(1)
+    3 DISPLAY
+    CURDEPTH(0) :
+    QUEUE(APP.BACKOUT) CURDEPTH(0)
+    5 DISPLAY
+    CURDEPTH(0) 
+--- conteudo de APP.OUT: {"valor":100,"processedBy":"ACE-LAB","processedAt":"2026-10-03T20:00:50.371+00:00"}
+--- linhas novas no trace do Catch: 0
+--- linhas novas no log do servidor: 0
+
+=================== M3 - forcarErro
+>>> payload: {"orderId":"80","forcarErro":"true"}   em 20:00:57.419 UTC
+    1 DISPLAY
+    CURDEPTH(0) :
+    QUEUE(APP.OUT) CURDEPTH(0)
+    3 DISPLAY
+    CURDEPTH(1) :
+    QUEUE(APP.BACKOUT) CURDEPTH(0)
+    5 DISPLAY
+    CURDEPTH(0) 
+--- conteudo de APP.DLQ: {"original":{"orderId":"80","forcarErro":"true"},"erro":{"codigo":2951,"mensagem":"User generated exception","detalhe":"Falha proposital para testar backout","tentativas":3,"flow":"PassThrough","falhouEm":"2026-10-03T20:00:59.639+00:00"}}
+--- linhas novas no trace do Catch: 3
+2026-10-03 20:00:57.598723 BOC=0 orderId='80'
+2026-10-03 20:00:58.605984 BOC=1 orderId='80'
+2026-10-03 20:00:59.639242 BOC=2 orderId='80'
+--- linhas novas no log do servidor: 12
+2026-10-03 20:00:57.599424Z: [Thread 6800] (Msg 1/4) BIP2232E: Erro detectado ao manipular um erro anterior no nó 'PassThrough.TratarFalha'. 
+2026-10-03 20:00:57.601900Z: [Thread 6800] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.ProcessarPedido'. 
+2026-10-03 20:00:57.604320Z: [Thread 6800] (Msg 3/4) BIP2488E:  (.PassThrough_Compute.Main, 14.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 295
+2026-10-03 20:00:57.608508Z: [Thread 6800] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Falha proposital para testar backout' 'PassThrough.ProcessarPedido' '
+2026-10-03 20:00:57.614176Z: [Thread 6800] (Msg 1/4) BIP2628W: Condição de exceção detectada no nó de entrada 'PassThrough.LerPedido'. 
+2026-10-03 20:00:57.616760Z: [Thread 6800] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.TratarFalha'. 
+2026-10-03 20:00:57.619260Z: [Thread 6800] (Msg 3/4) BIP2488E:  (.PassThrough_TratarFalha.Main, 14.7) Detectado erro ao executar a instrução SQL 'THROW EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE
+2026-10-03 20:00:57.623840Z: [Thread 6800] (Msg 4/4) BIP2951I: Evento gerado pelo código do usuário. Informações adicionais : 'Retentativa 1 de 3' 'PassThrough.TratarFalha' '{2}' '{3}' '{4}' '{5}'
+2026-10-03 20:00:58.606800Z: [Thread 6800] (Msg 1/4) BIP2232E: Erro detectado ao manipular um erro anterior no nó 'PassThrough.TratarFalha'. 
+2026-10-03 20:00:58.612384Z: [Thread 6800] (Msg 2/4) BIP2230E: Foi detectado um erro ao processar uma mensagem no nó 'PassThrough.ProcessarPedido'. 
