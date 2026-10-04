@@ -1,0 +1,17 @@
+# Analise de tempo - execucao 1 do teste final (2026-10-04T10:44:05-03:00)
+# eventos: processedAt (validos, V) e falhouEm (DLQ: T transitorio, P permanente), em UTC
+primeiro -> ultimo evento: 130.7 s | intervalos > 0,5 s: 99, somando 130.7 s
+--- os 10 maiores intervalos (segundos, tipo do evento seguinte)
+3.07 T
+3.07 T
+3.06 T
+3.06 T
+3.06 T
+3.05 T
+3.05 T
+3.04 T
+3.04 T
+3.03 T
+--- conclusao: todos os 99 intervalos > 0,5 s. Transitorio ~3,05 s (3 entregas); demais ~1,0 s.
+#   O ~1 s nao e espera de rollback: e o ciclo entre um MQGET e o proximo neste ambiente.
+#   Vazao ~0,8 msg/s com 1 instancia. Hipoteses: H1 disco (persistencia), H2 rede (cliente), H3 MQInput.
