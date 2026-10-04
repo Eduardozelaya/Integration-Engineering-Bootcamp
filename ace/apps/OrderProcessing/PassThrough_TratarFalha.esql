@@ -40,6 +40,17 @@ CREATE COMPUTE MODULE PassThrough_TratarFalha
     SET OutputRoot.Properties = InputRoot.Properties;
     SET OutputRoot.MQMD       = InputRoot.MQMD;
     SET OutputRoot.JSON.Data.original        = InputRoot.JSON.Data;
+    
+    -- B1c: bytes originais como texto, para mensagens que o parser nao consegue ler (exp B0/B1, M1).
+    -- Protegido por handler: se o ASBITSTREAM falhar, o caminho de erro continua (nao repete o exp E).
+    BEGIN
+      DECLARE CONTINUE HANDLER FOR SQLSTATE LIKE '%' BEGIN
+        SET OutputRoot.JSON.Data.originalBruto = '(indisponivel)';
+      END;
+      SET OutputRoot.JSON.Data.originalBruto =
+          CAST(ASBITSTREAM(InputRoot.JSON) AS CHARACTER CCSID 1208);
+    END;
+    
     SET OutputRoot.JSON.Data.erro.codigo     = codigo;
     SET OutputRoot.JSON.Data.erro.mensagem   = texto;
     SET OutputRoot.JSON.Data.erro.detalhe    = detalhe;
