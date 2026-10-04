@@ -2,26 +2,18 @@ CREATE COMPUTE MODULE PassThrough_TratarFalha
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
     DECLARE tentativa INTEGER InputRoot.MQMD.BackoutCount;
-    
-    -- Idempotencia: se ESTA mensagem marcou o pedido, desfaz a marca antes do rollback.
-    -- Sem isto, a reentrega encontra a marca e vai para APP.DUP (exp D2a).
+
+    -- Idempotencia: se ESTA mensagem marcou o pedido, desfaz a marca antes do rollback (exp D2a/D2b).
     IF Environment.Idempotencia.chaveMarcada IS NOT NULL THEN
       CALL desmarcar(Environment.Idempotencia.chaveMarcada);
       SET Environment.Idempotencia.chaveMarcada = NULL;
     END IF;
 
-    -- Ainda há tentativas: relança para provocar rollback e retentativa
-    IF tentativa < 2 THEN
-      THROW USER EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951
-            VALUES('Retentativa ' || CAST(tentativa + 1 AS CHARACTER) || ' de 3');
-    END IF;
-
-    -- Última tentativa: extrai o erro mais interno do ExceptionList
+    -- 1. Extrai o erro mais interno ANTES de decidir (a decisao depende do codigo)
     DECLARE ex REFERENCE TO InputExceptionList.*[1];
-    DECLARE codigo INTEGER;
-    DECLARE texto CHARACTER;
+    DECLARE codigo  INTEGER;
+    DECLARE texto   CHARACTER;
     DECLARE detalhe CHARACTER;
-
     WHILE LASTMOVE(ex) DO
       IF ex.Number IS NOT NULL THEN
         SET codigo = ex.Number;
@@ -33,19 +25,29 @@ CREATE COMPUTE MODULE PassThrough_TratarFalha
       MOVE ex LASTCHILD;
     END WHILE;
 
-    -- Envelope para a DLQ: original intacto + motivo estruturado
+    -- 2. Classifica (criterio do exp B0):
+    --    5700-5799 = parser JSON; 2952 = validacao de negocio -> PERMANENTE (retentar nao resolve)
+    --    qualquer outro, inclusive 2951 -> TRANSITORIO (pode passar numa nova tentativa)
+    DECLARE permanente BOOLEAN COALESCE((codigo = 2952) OR (codigo BETWEEN 5700 AND 5799), FALSE);
+
+    -- 3. Transitorio com tentativas restantes: relanca para provocar rollback e nova entrega
+    IF NOT permanente AND tentativa < 2 THEN
+      THROW USER EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2951
+            VALUES('Retentativa ' || CAST(tentativa + 1 AS CHARACTER) || ' de 3');
+    END IF;
+
+    -- 4. Permanente (1a passagem) ou transitorio esgotado: envelope para a DLQ
     SET OutputRoot.Properties = InputRoot.Properties;
     SET OutputRoot.MQMD       = InputRoot.MQMD;
-
-    SET OutputRoot.JSON.Data.original = InputRoot.JSON.Data;
+    SET OutputRoot.JSON.Data.original        = InputRoot.JSON.Data;
     SET OutputRoot.JSON.Data.erro.codigo     = codigo;
     SET OutputRoot.JSON.Data.erro.mensagem   = texto;
     SET OutputRoot.JSON.Data.erro.detalhe    = detalhe;
+    SET OutputRoot.JSON.Data.erro.tipo       = CASE WHEN permanente THEN 'PERMANENTE' ELSE 'TRANSITORIO' END;
     SET OutputRoot.JSON.Data.erro.tentativas = tentativa + 1;
     SET OutputRoot.JSON.Data.erro.flow       = 'PassThrough';
     SET OutputRoot.JSON.Data.erro.falhouEm   =
         CAST(CURRENT_GMTTIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SSSZZZ');
-
     RETURN TRUE;
   END;
 END MODULE;

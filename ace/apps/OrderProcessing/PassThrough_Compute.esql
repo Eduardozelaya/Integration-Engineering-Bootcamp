@@ -2,6 +2,13 @@ CREATE COMPUTE MODULE PassThrough_Compute
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
     DECLARE chave CHARACTER COALESCE(CAST(InputRoot.JSON.Data.orderId AS CHARACTER), '');
+    
+    -- Validacao de negocio: pedido sem identificacao e erro PERMANENTE (codigo 2952).
+    -- Sem isto, um pedido sem orderId e processado em silencio e escapa da deduplicacao (exp B0, M2).
+    IF chave = '' THEN
+      THROW USER EXCEPTION SEVERITY 3 CATALOG 'BIPmsgs' MESSAGE 2952
+            VALUES('Pedido sem orderId');
+    END IF;
 
     SET OutputRoot = InputRoot;
 

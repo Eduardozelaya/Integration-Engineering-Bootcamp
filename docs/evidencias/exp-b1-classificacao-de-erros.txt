@@ -1,0 +1,48 @@
+# Exp B1 - validacao do orderId (2952) + classificacao permanente x transitorio no TratarFalha | 2026-10-04T09:07:28-03:00
+# previsao: ver docs/log.md, linha de 03/10
+# portao: APP.IN CURDEPTH(0) IPPROCS(1) 
+
+=================== M1 - JSON quebrado
+>>> payload: {"orderId":   em 12:07:29.140 UTC
+    QUEUE(APP.IN) CURDEPTH(0)
+    QUEUE(APP.OUT) CURDEPTH(0)
+    QUEUE(APP.DLQ) CURDEPTH(1)
+    QUEUE(APP.BACKOUT) CURDEPTH(0)
+    QUEUE(APP.DUP) CURDEPTH(0)
+--- conteudo de APP.DLQ: {"original":{},"erro":{"codigo":5702,"mensagem":"The JSON parser reached the end of the bitstream whilst parsing the JSON document","detalhe":"\"[\", \"{\", \"value\"","tipo":"PERMANENTE","tentativas":1,"flow":"PassThrough","falhouEm":"2026-10-04T12:07:29.225+00:00"}}
+--- passagens pelo Catch (linhas novas no trace): 1
+2026-10-04 12:07:29.224819 BOC=0 orderId=NULL
+
+=================== M2 - sem orderId
+>>> payload: {"valor":200}   em 12:07:36.493 UTC
+    QUEUE(APP.IN) CURDEPTH(0)
+    QUEUE(APP.OUT) CURDEPTH(0)
+    QUEUE(APP.DLQ) CURDEPTH(1)
+    QUEUE(APP.BACKOUT) CURDEPTH(0)
+    QUEUE(APP.DUP) CURDEPTH(0)
+--- conteudo de APP.DLQ: {"original":{"valor":200},"erro":{"codigo":2952,"mensagem":"User generated exception","detalhe":"Pedido sem orderId","tipo":"PERMANENTE","tentativas":1,"flow":"PassThrough","falhouEm":"2026-10-04T12:07:36.605+00:00"}}
+--- passagens pelo Catch (linhas novas no trace): 1
+2026-10-04 12:07:36.605427 BOC=0 orderId=NULL
+
+=================== M3 - forcarErro
+>>> payload: {"orderId":"81","forcarErro":"true"}   em 12:07:43.568 UTC
+    QUEUE(APP.IN) CURDEPTH(0)
+    QUEUE(APP.OUT) CURDEPTH(0)
+    QUEUE(APP.DLQ) CURDEPTH(1)
+    QUEUE(APP.BACKOUT) CURDEPTH(0)
+    QUEUE(APP.DUP) CURDEPTH(0)
+--- conteudo de APP.DLQ: {"original":{"orderId":"81","forcarErro":"true"},"erro":{"codigo":2951,"mensagem":"User generated exception","detalhe":"Falha proposital para testar backout","tipo":"TRANSITORIO","tentativas":3,"flow":"PassThrough","falhouEm":"2026-10-04T12:07:45.758+00:00"}}
+--- passagens pelo Catch (linhas novas no trace): 3
+2026-10-04 12:07:43.708632 BOC=0 orderId='81'
+2026-10-04 12:07:44.731328 BOC=1 orderId='81'
+2026-10-04 12:07:45.757997 BOC=2 orderId='81'
+
+=================== M4 - pedido valido (controle)
+>>> payload: {"orderId":"82","valor":820}   em 12:07:50.759 UTC
+    QUEUE(APP.IN) CURDEPTH(0)
+    QUEUE(APP.OUT) CURDEPTH(1)
+    QUEUE(APP.DLQ) CURDEPTH(0)
+    QUEUE(APP.BACKOUT) CURDEPTH(0)
+    QUEUE(APP.DUP) CURDEPTH(0)
+--- conteudo de APP.OUT: {"orderId":"82","valor":820,"processedBy":"ACE-LAB","processedAt":"2026-10-04T12:07:50.881+00:00"}
+--- passagens pelo Catch (linhas novas no trace): 0
