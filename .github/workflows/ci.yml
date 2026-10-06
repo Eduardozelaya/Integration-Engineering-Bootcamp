@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck (falha so em erros)
+        run: shellcheck -S error scripts/*.sh mq/config/*.sh
+
+  mq:
+    name: IBM MQ sobe do zero com a configuracao do repositorio
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gerar senhas descartaveis
+        run: |
+          for v in MQ_APP_PASSWORD MQ_ADMIN_PASSWORD; do
+            p=$(openssl rand -hex 8); echo "::add-mask::$p"; echo "$v=$p" >> "$GITHUB_ENV"
+          done
+
+      - name: Subir o IBM MQ (imagem de desenvolvedor)
+        run: |
+          docker run -d --name qm1 -e LICENSE=accept -e MQ_QMGR_NAME=QM1 \
+            -e MQ_APP_PASSWORD -e MQ_ADMIN_PASSWORD icr.io/ibm-messaging/mq:latest
+          for i in $(seq 1 90); do
+            docker exec qm1 dspmq 2>/dev/null | grep -q "(Running)" && break; sleep 2
+          done
+          docker exec qm1 dspmq | grep "(Running)"
+
+      - name: Aplicar queues.mqsc e authorities.sh (igual ao up.sh)
+        run: |
+          set -o pipefail
+          docker exec -i qm1 runmqsc QM1 < mq/config/queues.mqsc | tee mqsc.log
+          docker exec -i qm1 bash -s -- QM1 < mq/config/authorities.sh
+
+      - name: Conferir protecao das filas de entrada (licao do R3a)
+        run: |
+          for q in APP.IN APP.REQ; do
+            echo "DISPLAY QLOCAL($q) BOTHRESH BOQNAME" | docker exec -i qm1 runmqsc QM1 > d.txt
+            grep -q "BOTHRESH(3)" d.txt || { cat d.txt; echo "::error::$q sem BOTHRESH(3)"; exit 1; }
+            grep -q "BOQNAME(APP" d.txt || { cat d.txt; echo "::error::$q sem BOQNAME"; exit 1; }
+          done
+
+      - name: Conferir permissoes do app (licao do erro 5 de 18/09 e do drift de 05/10)
+        run: |
+          docker exec qm1 dmpmqaut -m QM1 -n "APP.**" -t queue -p app | tee a.txt
+          for p in get put passall setall; do
+            grep -qw "$p" a.txt || { echo "::error::app sem +$p no perfil APP.**"; exit 1; }
+          done
+
+      - name: Smoke test (put e get)
+        run: |
+          echo '{"orderId":"ci-1"}' | docker exec -i qm1 /opt/mqm/samp/bin/amqsput APP.IN QM1
+          docker exec qm1 /opt/mqm/samp/bin/amqsget APP.IN QM1 | grep -q 'ci-1'
+
+      - name: D-T0 na nuvem (100 put + 100 get, mensagens persistentes)
+        run: |
+          for i in $(seq 1 100); do echo "{\"orderId\":\"$i\"}"; done > carga.txt
+          T0=$(date +%s%3N)
+          docker exec -i qm1 /opt/mqm/samp/bin/amqsput APP.IN QM1 < carga.txt > /dev/null
+          T1=$(date +%s%3N)
+          docker exec qm1 /opt/mqm/samp/bin/amqsget APP.IN QM1 > /dev/null
+          T2=$(date +%s%3N)
+          echo "D-T0 no runner do GitHub: gravar 100 = $((T1-T0)) ms | ler 100 = $((T2-T1-15000)) ms (descontada a espera de 15 s do amqsget)" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
