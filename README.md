@@ -1,5 +1,7 @@
 # integration-lab
 
+![ci](https://github.com/Eduardozelaya/Integration-Engineering-Bootcamp/actions/workflows/ci.yml/badge.svg)
+
 Laboratório de integração enterprise com **IBM App Connect Enterprise (ACE) 12** e **IBM MQ**, construído do zero para estudo e como portfólio. Cada afirmação deste repositório vem acompanhada de **evidência reproduzível**: configuração versionada, trace do flow, profundidade das filas e log do servidor, todos amarrados pelo mesmo identificador de mensagem.
 
 > **English summary.** Hands-on integration lab with IBM ACE 12 and IBM MQ. Every claim is backed by reproducible evidence (versioned config, flow trace, queue depths, server logs). Current focus: transactional messaging — proving under which conditions a message is retried, dead-lettered, backed out or lost.
