@@ -7,18 +7,18 @@ on:
 jobs:
   lint:
     name: shellcheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: shellcheck (falha so em erros)
         run: shellcheck -S error scripts/*.sh mq/config/*.sh
 
   mq:
     name: IBM MQ sobe do zero com a configuracao do repositorio
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Gerar senhas descartaveis
         run: |
@@ -29,7 +29,7 @@ jobs:
       - name: Subir o IBM MQ (imagem de desenvolvedor)
         run: |
           docker run -d --name qm1 -e LICENSE=accept -e MQ_QMGR_NAME=QM1 \
-            -e MQ_APP_PASSWORD -e MQ_ADMIN_PASSWORD icr.io/ibm-messaging/mq:latest
+            -e MQ_APP_PASSWORD -e MQ_ADMIN_PASSWORD icr.io/ibm-messaging/mq@sha256:2cb02e7991ac9fc44d10ba4e353abdc1402ec1667243b74a4574df5f274d7907
           for i in $(seq 1 90); do
             docker exec qm1 dspmq 2>/dev/null | grep -q "(Running)" && break; sleep 2
           done
@@ -51,7 +51,7 @@ jobs:
 
       - name: Conferir permissoes do app (licao do erro 5 de 18/09 e do drift de 05/10)
         run: |
-          docker exec qm1 dmpmqaut -m QM1 -n "APP.**" -t queue -p app | tee a.txt
+          docker exec qm1 dmpmqaut -m QM1 -n "APP.**" -t queue -p app 2>&1 | tee a.txt
           for p in get put passall setall; do
             grep -qw "$p" a.txt || { echo "::error::app sem +$p no perfil APP.**"; exit 1; }
           done
