@@ -12,3 +12,11 @@ datapower/local/*
 # qualquer variante do .env (backups, copias locais); so o modelo e versionado
 .env*
 !.env.example
+
+# Terraform: o estado guarda segredos
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+tfplan
+tfplan
