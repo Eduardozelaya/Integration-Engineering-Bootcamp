@@ -1,0 +1,14 @@
+# Exp D-T0 - linha de base do MQ sem o ACE, no lab (WSL2) | 2026-10-05T22:27:53-03:00
+# 100 msgs persistentes, amqsput/amqsget dentro do container, fila temporaria TMP.DT0 (DEFPSIST YES)
+# referencia: runner do GitHub (ci #2): gravar 100 = 65 ms | ler 100 = 122 ms
+AMQ8006I: IBM MQ queue created.
+rodada 1: gravar 100 = 402 ms | ler 100 = 268 ms (descontados os 15 s do amqsget)
+rodada 2: gravar 100 = 407 ms | ler 100 = 313 ms (descontados os 15 s do amqsget)
+rodada 3: gravar 100 = 310 ms | ler 100 = 243 ms (descontados os 15 s do amqsget)
+AMQ8007I: IBM MQ queue deleted.
+# ===== ANALISE
+# WSL2: ~3-4 ms por operacao persistente (3 rodadas estaveis). GitHub runner: ~1-2 ms. WSL2 3-5x mais lento.
+# O ACE leva ~1000 ms por mensagem (teste final): o disco explica no maximo 1-2% disso. H1 DESCARTADA.
+# Ressalva: amqsget le sem transacao; o ACE le com uma transacao por mensagem. Mesmo com algumas gravacoes
+#   forcadas por mensagem (~10-20 ms), a diferenca para 1000 ms continua de ~50x.
+# Sobram: H2 (rede cliente Windows->WSL->Docker) e H3 (MQInput). Proximo: D-T1 (instancias adicionais).
