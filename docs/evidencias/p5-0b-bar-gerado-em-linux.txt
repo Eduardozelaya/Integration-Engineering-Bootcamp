@@ -1,0 +1,26 @@
+# P5-0b - BAR gerado em Linux (ACE 12.0.12.27, modo developer), a partir do git, sem o Toolkit | 2026-10-07T15:59:31-03:00
+# origem: git archive do commit 8552286 (fim de linha LF); implantado no TEST_SERVER1 (Windows)
+===== lista de arquivos: BAR do Toolkit (Windows) x BAR do Linux
+13 arquivos nos dois; unica diferenca: separador de pasta nos arquivos da policy
+< R2Policies\MQ_LOCAL.policyxml   (Windows)
+> R2Policies/MQ_LOCAL.policyxml    (Linux)
+# deploy no Windows: BIP9326I; policy lida (BIP9339W: valores iguais aos existentes).
+# risco para o P5-1: o BAR do Windows grava '\' nos nomes; num servidor Linux, pode nao ser lido como pasta.
+===== teste final com o BAR do Linux
+# Teste final - execucao 4 | orderId na faixa 4000 | 2026-10-07T15:55:01-03:00
+# portao: IPPROCS(1), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 18:55:01 UTC
+>>> APP.IN vazia apos ~143 s
+===== conferencias
+  ok      APP.OUT: 70
+  ok      APP.DLQ: 30
+  ok      APP.DUP: 10
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  ok      orderId repetidos na OUT: 0
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: PASSOU
+# tempo igual ao das execucoes 1-3 (~143 s) com outro BAR: o limite de 1 tps e do runtime (achado H4).
+# log do servidor: carga as 15:55:01; 1a falha transitoria as 15:55:36, depois dos 35 validos (~1 msg/s).
