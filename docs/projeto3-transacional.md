@@ -348,3 +348,59 @@ O segundo ponto responde a *"como promover de dev para prod sem alterar o BAR?"*
 - [ ] **Teste final:** 100 mensagens, 30% com erro; soma das filas fechando, zero duplicatas, três execuções seguidas.
 - [ ] Tuning com `Additional instances`: throughput e perda de ordenação.
 - [ ] **F2:** amostrar `UNCOM` durante as retentativas e derrubar o consumidor com a transação aberta: prova o rollback implícito e mostra se o intervalo de ~1 s ocorre dentro ou fora da transação.
+
+---
+
+## Queda real do consumidor (exp F)
+
+O processo do servidor foi encerrado a forca (`taskkill /F`) durante uma retentativa. A mensagem voltou a `APP.IN` com o `BackoutCount` preservado, e a 3a tentativa ocorreu quando o servidor voltou, 6 minutos depois. O flow consumiu a mensagem 114 ms antes do `BIP1991I`: o consumo comeca no `BIP2269I`, nao no fim da inicializacao.
+Evidencia: `exp-f-queda-do-consumidor.txt` (79304f7).
+
+## Request/reply (R0, R1, R2, R1b)
+
+| Exp. | O que provou |
+|---|---|
+| R0 | caminho feliz do `ConsultarPedido` (`MQInput` APP.REQ -> Compute -> `MQReply`) |
+| R1 | o `CorrelId` da resposta e o `MsgId` da pergunta; o `MsgId` da resposta e novo; uma resposta sem leitor fica orfa e, sem `Expiry`, nunca expira |
+| R2 | o `amqsreq`, que le sem filtro, recebeu a resposta de **outro** pedido. Com `Expiry` 300 (30 s), a resposta orfa expira, mas a expiracao e preguicosa: so sai da fila quando alguem tenta le-la |
+| R1b | um requisitante que le com filtro pelo `CorrelId` (API REST, `?correlationId=`) recebe so a propria resposta e ignora a isca |
+
+Conclusao: quem garante a correlacao e o **requisitante**, lendo com filtro. O servico so carimba o `CorrelId`.
+
+**Equivalencia com "dois clientes simultaneos" (exercicio 6 do plano):** o R2 reproduz o risco (um cliente sem filtro leva a resposta do outro) e o R1b a protecao (com filtro, cada um recebe a sua). O cenario com dois clientes ao mesmo tempo nao foi montado porque testaria a mesma regra.
+
+## Erro no servico sincrono (serie R3)
+
+| Exp. | Configuracao | Requisicao | Requisitante | Registro |
+|---|---|---|---|---|
+| R3a | `APP.REQ` com `BOTHRESH(0)`, sem `BOQNAME` | presa em laco | HTTP 204 apos 10 s | 1 linha no log do ACE |
+| R3a' | `BOTHRESH(3)`, `BOQNAME(APP.REQ.BACKOUT)` | salva na backout (BOC 0), 3,0 s apos a 1a falha | HTTP 204 apos 10 s | 1 linha no log |
+| R3b | Catch responde com erro | **consumida e perdida** | HTTP 200 com o motivo, 297 ms | **nenhum** |
+| R3c | Catch responde, guarda e registra | guardada em `APP.REQ.ERRO` com o motivo | HTTP 200 com o motivo, 133 ms | 1 linha no trace por ocorrencia |
+
+**R3a, analise corrigida:** com `BOTHRESH(0)`, o `MQInput` tenta desviar ja na 2a entrega. Sem `BOQNAME`, o destino e a DEADQ do queue manager, que recusou com `2035` por falta de `+passall` (`AMQ8077W`). O `BackoutCount` 21 = 1 execucao do flow + 20 desvios recusados (21 recusas no `AMQERR01.LOG`). O laco veio da falta de permissao no destino do desvio, nao de "limite zero".
+
+**Regra:** tratar um erro nao pode significar esconde-lo. O caminho de erro completo responde, guarda o original e registra, na mesma unidade de trabalho.
+
+## Classificacao de erros (B0, B1, B1c)
+
+| Mensagem | Antes (B0) | Depois (B1/B1c) |
+|---|---|---|
+| JSON quebrado `{"orderId":` | 3 passagens, DLQ, codigo 5702, `"original":{}` | 1 passagem (85 ms), `PERMANENTE`, `originalBruto` com os bytes enviados |
+| texto nao-JSON | — | 1 passagem, codigo 5719, `PERMANENTE` |
+| sem `orderId` | **processada em silencio** na `APP.OUT` | DLQ, codigo 2952, `PERMANENTE` |
+| `forcarErro` | 3 passagens, 2951 | igual, agora `TRANSITORIO` |
+| pedido valido | — | `APP.OUT`, 0 passagens (controle) |
+
+Criterio: codigos 5700-5799 (parser JSON) e 2952 (validacao de negocio) sao permanentes; todo o resto e transitorio. Classificar por faixa, e nao por codigo exato, cobriu o 5719, que o levantamento do B0 nao tinha mostrado. O `originalBruto` vem de `ASBITSTREAM`, protegido por `CONTINUE HANDLER`: se falhar, o caminho de erro continua.
+
+## Teste final (criterio de pronto)
+
+Tres execucoes de 110 mensagens: 70 validas, 15 transitorias, 15 permanentes (5 sem `orderId`, 10 ilegiveis), 10 duplicatas. Nove conferencias em cada uma: OUT 70, DLQ 30, DUP 10, BACKOUT 0, soma 110, zero `orderId` repetido na OUT, 15 transitorios com 3 tentativas, 15 permanentes com 1, 30 com `originalBruto`. **Passou nas tres.** Script: `scripts/teste-final.sh`; evidencias: `docs/evidencias/teste-final/` (b55b08d).
+
+**Achado de desempenho:** ~143 s por execucao; todo intervalo entre mensagens passa de 0,5 s; ~1 s por mensagem, vazao ~0,8 msg/s. O D-T0 mediu o MQ sem o ACE: ~3-4 ms por mensagem no WSL2 e ~1-2 ms no runner do GitHub. O disco nao explica o ~1 s (H1 descartada). Em aberto: rede cliente (H2) e `MQInput` (H3), a investigar com replicas no Projeto 5.
+
+## Decisoes de desenho
+
+- **Sem flow `BackoutHandler`.** O plano previa um flow lendo a `APP.BACKOUT` e gravando na DLQ com o motivo. O lab grava na DLQ pelo Catch do proprio flow, com motivo e classificacao. A `APP.BACKOUT` ficou como rede de seguranca do MQ, para quando o proprio tratamento de erro falha (exp E).
+- **Duas filas de erro com papeis distintos.** `APP.BACKOUT` / `APP.REQ.BACKOUT`: o MQ desvia, sem motivo, apos `BOTHRESH`. `APP.DLQ` / `APP.REQ.ERRO`: o flow grava, com motivo, original e classificacao.

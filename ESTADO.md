@@ -386,3 +386,8 @@ ibmint deploy --input-bar-file C:\temp\OrderProcessing.bar --output-host localho
 - [ ] Mestrado em paralelo? Se sim, manter 4 h/semana e Tier 1 em ~16 semanas
 - [ ] Inglês técnico de conversa. Teste: gravar 3 min explicando o Projeto 3 em inglês
 - [ ] Certificação **C1000-171** (ACE v12.0). Cobre App Connect Designer e CDK (~6 h a mais). **Agendar a prova antes de se sentir pronto.**
+
+## Situacao dos projetos (06/10)
+- Projeto 3: **concluido**. Criterio de pronto atingido em 04/10 (teste final 3x); ambiente reproduzivel provado pelo CI em 05/10; documentacao fechada em 06/10.
+- Pendencias do Projeto 3 deslocadas: Frente D (instancias/replicas, ordem, concorrencia da deduplicacao) vai para o Projeto 5; Frente E (pub/sub) apos o P5-1; comparativo WSO2 MI opcional.
+- Proximo: Projeto 5 (P5-0: BAR gerado a partir do repositorio, em Linux, sem Toolkit).

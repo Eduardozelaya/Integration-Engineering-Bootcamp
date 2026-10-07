@@ -107,3 +107,29 @@ No laboratório, todos os efeitos do flow são gravações em fila na mesma unid
 - "Por que `+passall` é uma permissão separada de `+put`?" — `docs/projeto3-idempotencia.md`, seção 6
 - "Como você investiga uma mensagem que sumiu?" — laço de filas, trace, `events.txt` em UTC, `AMQERR01.LOG`, `amqsbcg`
 - "Como o requisitante encontra a sua resposta numa fila compartilhada?" — request/reply (R0/R1, pendente)
+
+---
+
+## 3. Num request/reply, como o requisitante encontra a sua resposta?
+
+O servico copia o `MsgId` da pergunta para o `CorrelId` da resposta (R1). Mas quem garante a correlacao e o requisitante: ele tem de ler a fila de respostas filtrando pelo proprio `CorrelId`. No R2, um requisitante sem filtro recebeu a resposta de outro pedido; no R1b, com filtro, recebeu so a sua e ignorou a isca. A resposta tambem precisa de `Expiry`, senao uma resposta sem leitor fica na fila para sempre.
+
+## 4. Um erro tratado pode desaparecer?
+
+Pode. No R3b, o Catch respondia ao requisitante com o motivo, e o flow terminava normalmente: commit, a requisicao era consumida, e o log do servidor nao registrava nada. Um servico falhando em 100% das consultas mostraria zero erros. A correcao (R3c) foi o caminho de erro responder, guardar o original numa fila de auditoria e registrar num trace, na mesma unidade de trabalho.
+
+## 5. Todo erro merece retentativa?
+
+Nao. Retentar um JSON invalido gasta tempo e esconde o problema. No B1, o tratamento passou a classificar pelo codigo do erro: parser (5700-5799) e validacao de negocio (2952) sao permanentes e vao para a DLQ na 1a passagem; o resto e transitorio e ganha 3 tentativas. A DLQ registra o tipo, e quem opera sabe se deve reprocessar ou falar com quem enviou.
+
+## 6. BOTHRESH(0) e seguro?
+
+Nao, e o motivo nao e o obvio. Com `BOTHRESH(0)`, o MQ desvia ja na 2a entrega; sem `BOQNAME`, vai para a DEADQ. No R3a, o desvio foi recusado por falta de `+passall` na DEADQ, e a mensagem entrou em laco: uma por segundo, com 1 linha no log do ACE e 21 recusas no log do queue manager. Hoje o CI barra qualquer fila de entrada sem `BOTHRESH(3)` e `BOQNAME`.
+
+## 7. Como voce sabe que o seu ambiente e reproduzivel?
+
+Porque um pipeline o recria do zero a cada commit. Ao montar o CI, ele mostrou que o meu nao era: uma permissao (`+passall`) tinha sido aplicada a mao e nunca entrou no codigo. Um ambiente novo falharia com `2035` no primeiro pedido. Corrigi, e o pipeline passou a conferir essa permissao.
+
+## 8. Como voce investiga um problema de desempenho?
+
+Separando as camadas. O teste final mostrou ~1 s por mensagem. Medi o MQ sozinho, sem o ACE, no lab e num runner do GitHub: 3-4 ms e 1-2 ms por mensagem. O disco ficou descartado como causa, e a investigacao foi para a camada entre o ACE e o MQ.
