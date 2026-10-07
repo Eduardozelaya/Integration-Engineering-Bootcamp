@@ -25,4 +25,4 @@ BIP1802I: This IBM App Connect Enterprise installation is in 'developer' mode.
 #
 # ===== conclusao
 # Explicado pela documentacao e pelo modo verificado nos dois ambientes.
-# PROVA EXPERIMENTAL PENDENTE: D-T1. Se o limite e por flow, mais instancias adicionais NAO aumentam a vazao.
+# PROVA EXPERIMENTAL (07/10, D-T1): com 3 leitores (IPPROCS 3), o teste final levou os mesmos ~143 s. H4 confirmada.
