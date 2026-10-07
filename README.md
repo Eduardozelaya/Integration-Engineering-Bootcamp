@@ -25,7 +25,7 @@ Relatório técnico completo: [`docs/projeto3-transacional.md`](docs/projeto3-tr
 
 ### Achados medidos, não supostos
 
-- **Cada mensagem leva ~1 s neste ambiente, com ou sem rollback** (teste final), enquanto o MQ sozinho faz ~3–4 ms por mensagem ([D-T0](docs/evidencias/exp-d-t0-linha-de-base-mq.txt)). O disco foi descartado; o gargalo está entre o ACE e o MQ, em investigação.
+- **Cada mensagem leva ~1 s neste ambiente, com ou sem rollback** (teste final), enquanto o MQ sozinho faz ~3–4 ms ([D-T0](docs/evidencias/exp-d-t0-linha-de-base-mq.txt)). A causa e o **modo `developer` do ACE**, que limita cada flow a 1 transacao por segundo: confirmado pela documentacao da IBM e pelo `mqsiservice -v` ([achado H4](docs/evidencias/achado-h4-modo-developer.txt)); prova experimental pendente.
 - **O `BackoutCount` conta rollbacks de *qualquer* programa**, não só do ACE. Uma ferramenta de administração falhando em silêncio levou o BOC de uma mensagem de 0 para 3 ([evidência](docs/evidencias/achado-dmpmqmsg-boc3.txt)).
 - **Tratar um erro pode escondê-lo:** um Catch que responde e termina normalmente faz o commit, e o log do servidor não registra nada ([exp-r3b](docs/evidencias/exp-r3b-servico-responde-erro.txt)).
 - **`BOTHRESH(0)` não é "sem limite":** o MQ desvia já na 2ª entrega, e sem permissão na DEADQ a mensagem entra em laço, com uma única linha no log ([exp-r3a](docs/evidencias/exp-r3a-servico-falha-sem-tratamento.txt)).

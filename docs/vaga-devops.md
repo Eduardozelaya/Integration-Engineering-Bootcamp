@@ -1,2 +1,3 @@
 | 06/10 | gitleaks em 59 commits: 2 achados, ambos um marcador do .env.example; revisados em .gitleaksignore; job no CI com fetch-depth 0 | GitHub Actions, gitleaks | seguranca no pipeline: segredo commitado deixa o build vermelho |
 | 06/10 | imagem do MQ fixada pelo digest tambem no compose | Docker | uma unica versao em lab, CI e Terraform |
+| 07/10 | causa do ~1 s por mensagem: o modo 'developer' do ACE limita cada flow a 1 transacao/s; H1 descartada antes por medicao, H4 confirmada por documentacao e mqsiservice -v | diagnostico | investigacao por eliminacao; distinguir limite de licenca de problema de desenho |

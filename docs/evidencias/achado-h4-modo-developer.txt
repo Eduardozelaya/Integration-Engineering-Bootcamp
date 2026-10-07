@@ -1,0 +1,28 @@
+# Achado H4 - o ~1 s por mensagem e o limite do modo 'developer' do ACE | 07/10/2026
+#
+# OBSERVACAO (teste final, 04/10): ~1 s por mensagem, inclusive validas e sem rollback; vazao ~0,8 msg/s.
+# D-T0 (05/10): o MQ sozinho faz ~3-4 ms/msg no WSL2 e ~1-2 ms no runner do GitHub. H1 (disco) descartada.
+#
+# ===== modo de operacao, Windows (TEST_SERVER1, onde o teste final rodou): mqsiservice -v
+BIP8996I: Versão:    12.0.12.27
+BIP1802I: Esta instalação de tempo de execução do IBM App Connect Enterprise está no modo 'developer'.
+BIP8998I: Nível do Código: S1200-L260604.10793
+#
+# ===== modo de operacao, Linux (WSL, instalado em 07/10): mqsiservice -v
+BIP8996I: Version:    12.0.12.27
+BIP1802I: This IBM App Connect Enterprise installation is in 'developer' mode.
+#
+# ===== documentacao da IBM
+# "Restrictions that apply in each operation mode": no modo developer, a edicao para
+#   desenvolvedores e restrita a processar uma mensagem (transacao) por segundo.
+#   https://www.ibm.com/support/knowledgecenter/SSTTDS_11.0.0/com.ibm.etools.mft.doc/an67720_.html
+# "IBM App Connect Enterprise features": o limite vale no nivel do message flow.
+#   https://www.ibm.com/support/knowledgecenter/en/SSTTDS_11.0.0/com.ibm.etools.mft.doc/bn28100_.htm
+# Ressalva: as duas paginas sao da documentacao do ACE 11. Para o ACE 12, um caso na comunidade IBM
+#   (flow HTTP no ACE 12.0.7.0 a 1 tps, contra 2700 tps no IIB 10) foi atribuido ao mesmo limite:
+#   https://community.ibm.com/community/user/discussion/ibm-ace-http-service-performance-degrade-while-load-test
+# Os logs de eventos do servidor (events.txt e .1 a .9) nao registram o modo.
+#
+# ===== conclusao
+# Explicado pela documentacao e pelo modo verificado nos dois ambientes.
+# PROVA EXPERIMENTAL PENDENTE: D-T1. Se o limite e por flow, mais instancias adicionais NAO aumentam a vazao.

@@ -404,6 +404,8 @@ Tres execucoes de 110 mensagens: 70 validas, 15 transitorias, 15 permanentes (5 
 
 **Achado de desempenho:** ~143 s por execucao; todo intervalo entre mensagens passa de 0,5 s; ~1 s por mensagem, vazao ~0,8 msg/s. O D-T0 mediu o MQ sem o ACE: ~3-4 ms por mensagem no WSL2 e ~1-2 ms no runner do GitHub. O disco nao explica o ~1 s (H1 descartada). Em aberto: rede cliente (H2) e `MQInput` (H3), a investigar com replicas no Projeto 5.
 
+> **Atualizacao (07/10), achado H4:** o ~1 s por mensagem e o limite do modo `developer` do ACE (1 transacao por segundo por flow), confirmado pela documentacao da IBM e pelo `mqsiservice -v` no Windows e no Linux. H2 e H3 ficam absorvidas. Prova experimental pendente: D-T1. Evidencia: `docs/evidencias/achado-h4-modo-developer.txt`.
+
 ## 20. Decisoes de desenho
 
 - **Sem flow `BackoutHandler`.** O plano previa um flow lendo a `APP.BACKOUT` e gravando na DLQ com o motivo. O lab grava na DLQ pelo Catch do proprio flow, com motivo e classificacao. A `APP.BACKOUT` ficou como rede de seguranca do MQ, para quando o proprio tratamento de erro falha (exp E).
