@@ -105,3 +105,15 @@ docs/              briefing, log de sessões, notas
 - **Evidência autocontida:** estado inicial comprovado, marcador de disparo, o mesmo identificador em todas as fontes e um diff de uma linha isolando a mudança.
 - **Segredos só no `.env`**, fora do git.
 - **Nenhum artefato de empregador.** Todo o conteúdo foi construído do zero.
+
+## Pipeline e infraestrutura como codigo
+
+| O que | Onde | O que prova |
+|---|---|---|
+| CI no GitHub Actions | `.github/workflows/ci.yml` | a cada push, o IBM MQ sobe do zero so com o que esta no repositorio; regras viram verificacoes (fila de entrada sem `BOTHRESH(3)` ou `app` sem `passall` = vermelho) |
+| Segredos | job `gitleaks` no CI + `.gitleaksignore` revisado | o historico inteiro e varrido a cada push; o unico achado (um marcador do `.env.example`) esta documentado |
+| Versoes fixadas | CI, compose e Terraform | o MQ 10.0.0.0 pelo mesmo digest nos tres lugares; `ubuntu-24.04`; `checkout@v5`; `gitleaks` 8.30.1 |
+| Terraform (provider Docker) | `infra/local/main.tf` | plan salvo e aplicado, estado fora do git, senhas como `sensitive`, `plan` limpo apos o `apply` |
+| Linha de base do MQ | `docs/evidencias/exp-d-t0-linha-de-base-mq.txt` | ~3-4 ms por mensagem no WSL2, ~1-2 ms no runner do GitHub |
+
+Detalhes e o que cada passo prova para operacao: `docs/vaga-devops.md`.
