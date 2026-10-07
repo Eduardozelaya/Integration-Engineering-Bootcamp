@@ -100,16 +100,6 @@ No laboratório, todos os efeitos do flow são gravações em fila na mesma unid
 
 ---
 
-## 3. Próximas perguntas a preparar
-
-- "Qual a diferença entre fila de backout e DLQ?" — `docs/projeto3-transacional.md`, seção 9
-- "Sua solução é *exactly-once*?" — `docs/projeto3-idempotencia.md`, seção 4
-- "Por que `+passall` é uma permissão separada de `+put`?" — `docs/projeto3-idempotencia.md`, seção 6
-- "Como você investiga uma mensagem que sumiu?" — laço de filas, trace, `events.txt` em UTC, `AMQERR01.LOG`, `amqsbcg`
-- "Como o requisitante encontra a sua resposta numa fila compartilhada?" — request/reply (R0/R1, pendente)
-
----
-
 ## 3. Num request/reply, como o requisitante encontra a sua resposta?
 
 O servico copia o `MsgId` da pergunta para o `CorrelId` da resposta (R1). Mas quem garante a correlacao e o requisitante: ele tem de ler a fila de respostas filtrando pelo proprio `CorrelId`. No R2, um requisitante sem filtro recebeu a resposta de outro pedido; no R1b, com filtro, recebeu so a sua e ignorou a isca. A resposta tambem precisa de `Expiry`, senao uma resposta sem leitor fica na fila para sempre.
@@ -133,3 +123,10 @@ Porque um pipeline o recria do zero a cada commit. Ao montar o CI, ele mostrou q
 ## 8. Como voce investiga um problema de desempenho?
 
 Separando as camadas. O teste final mostrou ~1 s por mensagem. Medi o MQ sozinho, sem o ACE, no lab e num runner do GitHub: 3-4 ms e 1-2 ms por mensagem. O disco ficou descartado como causa, e a investigacao foi para a camada entre o ACE e o MQ.
+
+## 9. Perguntas a preparar
+
+- "Qual a diferenca entre fila de backout e DLQ?" — `docs/projeto3-transacional.md`, secoes 9 e 20
+- "Sua solucao e *exactly-once*?" — `docs/projeto3-idempotencia.md`, secao 6 (janelas residuais)
+- "Por que `+passall` e uma permissao separada de `+put`?" — `docs/projeto3-idempotencia.md`, secao 3; o drift de 05/10 (`7a1d785`)
+- "Como voce investiga uma mensagem que sumiu?" — laco de filas, trace, `events.txt` em UTC, `AMQERR01.LOG`, `amqsbcg`

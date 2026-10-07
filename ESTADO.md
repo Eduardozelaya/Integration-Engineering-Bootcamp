@@ -256,7 +256,7 @@ iconv -f CP1252 -t UTF-8 /mnt/c/Users/LGzel/IBM/ACET12/servers/TEST_SERVER1/log/
 
 ### 7.2 Projeto 3, parte 2 — idempotência
 
-**Antes de codificar, responda por escrito em `docs/projeto3-idempotencia.md`:**
+**Antes de codificar, responda por escrito em `docs/projeto3-idempotencia.md`:** *(respondido em 06/10: secoes 4 a 6 do documento)*
 
 1. Em que ponto do flow o `MsgId` (ou o `orderId`) é marcado como processado? O **Global Cache não participa da transação MQ**:
    - marcar **antes** de um rollback faz a reentrega ser descartada como duplicata, o que é perda silenciosa;

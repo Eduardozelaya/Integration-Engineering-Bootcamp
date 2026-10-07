@@ -139,6 +139,8 @@ Evidências: `docs/evidencias/exp-c2-*` · `orderId 20` · commit `867d221`
 
 ---
 
+> **Atualizacao (04-05/10):** o teste final mediu ~1 s tambem entre mensagens validas, sem nenhum rollback, e o D-T0 descartou o disco como causa. O ~1 s e o ciclo entre uma leitura e a proxima neste ambiente, nao uma espera do rollback. Ver secao 19.
+
 ## 7. Experimento B2 — v2, `Transaction mode: No`
 
 Evidências: `docs/evidencias/exp-b2-*` · `orderId 21` · commits `2714638` e `65b68c9`
@@ -326,6 +328,8 @@ No experimento E, o trace (relógio do Windows) marcou a 1ª entrega em 02:50:54
 
 ---
 
+> **Atualizacao (06/10):** o item 3 foi resolvido pela classificacao (secao 18). O item 5 virou decisao de desenho (secao 20): a `APP.BACKOUT` e a rede de seguranca do MQ, e o motivo vai para a DLQ pelo Catch. Os itens 1, 2 e 4 continuam em aberto.
+
 ## 13. Erros de ferramenta resolvidos
 
 | Erro | Causa | Solução |
@@ -341,22 +345,22 @@ O segundo ponto responde a *"como promover de dev para prod sem alterar o BAR?"*
 
 ## 14. Próximos passos — parte 2
 
-- [ ] **Idempotência:** consumir uma duplicata sem duplicar o efeito. O Global Cache **não** participa da transação MQ, então o ponto do flow em que a mensagem é marcada como processada define se há perda (marca antes de um rollback) ou uma janela de duplicação (marca depois do commit).
-- [ ] Classificar erro permanente e transitório no `TratarFalha`.
-- [ ] Request/reply com `APP.REPLY`, `ReplyToQ` e `CorrelId = MsgId`.
+- [x] **Idempotência:** consumir uma duplicata sem duplicar o efeito. O Global Cache **não** participa da transação MQ, então o ponto do flow em que a mensagem é marcada como processada define se há perda (marca antes de um rollback) ou uma janela de duplicação (marca depois do commit).
+- [x] Classificar erro permanente e transitório no `TratarFalha`.
+- [x] Request/reply com `APP.REPLY`, `ReplyToQ` e `CorrelId = MsgId`.
 - [ ] Pub/sub em `APP.EVENTS`, com assinatura durável e não durável.
-- [ ] **Teste final:** 100 mensagens, 30% com erro; soma das filas fechando, zero duplicatas, três execuções seguidas.
+- [x] **Teste final:** 100 mensagens, 30% com erro; soma das filas fechando, zero duplicatas, três execuções seguidas.
 - [ ] Tuning com `Additional instances`: throughput e perda de ordenação.
 - [ ] **F2:** amostrar `UNCOM` durante as retentativas e derrubar o consumidor com a transação aberta: prova o rollback implícito e mostra se o intervalo de ~1 s ocorre dentro ou fora da transação.
 
 ---
 
-## Queda real do consumidor (exp F)
+## 15. Queda real do consumidor (exp F)
 
 O processo do servidor foi encerrado a forca (`taskkill /F`) durante uma retentativa. A mensagem voltou a `APP.IN` com o `BackoutCount` preservado, e a 3a tentativa ocorreu quando o servidor voltou, 6 minutos depois. O flow consumiu a mensagem 114 ms antes do `BIP1991I`: o consumo comeca no `BIP2269I`, nao no fim da inicializacao.
 Evidencia: `exp-f-queda-do-consumidor.txt` (79304f7).
 
-## Request/reply (R0, R1, R2, R1b)
+## 16. Request/reply (R0, R1, R2, R1b)
 
 | Exp. | O que provou |
 |---|---|
@@ -369,7 +373,7 @@ Conclusao: quem garante a correlacao e o **requisitante**, lendo com filtro. O s
 
 **Equivalencia com "dois clientes simultaneos" (exercicio 6 do plano):** o R2 reproduz o risco (um cliente sem filtro leva a resposta do outro) e o R1b a protecao (com filtro, cada um recebe a sua). O cenario com dois clientes ao mesmo tempo nao foi montado porque testaria a mesma regra.
 
-## Erro no servico sincrono (serie R3)
+## 17. Erro no servico sincrono (serie R3)
 
 | Exp. | Configuracao | Requisicao | Requisitante | Registro |
 |---|---|---|---|---|
@@ -382,7 +386,7 @@ Conclusao: quem garante a correlacao e o **requisitante**, lendo com filtro. O s
 
 **Regra:** tratar um erro nao pode significar esconde-lo. O caminho de erro completo responde, guarda o original e registra, na mesma unidade de trabalho.
 
-## Classificacao de erros (B0, B1, B1c)
+## 18. Classificacao de erros (B0, B1, B1c)
 
 | Mensagem | Antes (B0) | Depois (B1/B1c) |
 |---|---|---|
@@ -394,13 +398,13 @@ Conclusao: quem garante a correlacao e o **requisitante**, lendo com filtro. O s
 
 Criterio: codigos 5700-5799 (parser JSON) e 2952 (validacao de negocio) sao permanentes; todo o resto e transitorio. Classificar por faixa, e nao por codigo exato, cobriu o 5719, que o levantamento do B0 nao tinha mostrado. O `originalBruto` vem de `ASBITSTREAM`, protegido por `CONTINUE HANDLER`: se falhar, o caminho de erro continua.
 
-## Teste final (criterio de pronto)
+## 19. Teste final (criterio de pronto)
 
 Tres execucoes de 110 mensagens: 70 validas, 15 transitorias, 15 permanentes (5 sem `orderId`, 10 ilegiveis), 10 duplicatas. Nove conferencias em cada uma: OUT 70, DLQ 30, DUP 10, BACKOUT 0, soma 110, zero `orderId` repetido na OUT, 15 transitorios com 3 tentativas, 15 permanentes com 1, 30 com `originalBruto`. **Passou nas tres.** Script: `scripts/teste-final.sh`; evidencias: `docs/evidencias/teste-final/` (b55b08d).
 
 **Achado de desempenho:** ~143 s por execucao; todo intervalo entre mensagens passa de 0,5 s; ~1 s por mensagem, vazao ~0,8 msg/s. O D-T0 mediu o MQ sem o ACE: ~3-4 ms por mensagem no WSL2 e ~1-2 ms no runner do GitHub. O disco nao explica o ~1 s (H1 descartada). Em aberto: rede cliente (H2) e `MQInput` (H3), a investigar com replicas no Projeto 5.
 
-## Decisoes de desenho
+## 20. Decisoes de desenho
 
 - **Sem flow `BackoutHandler`.** O plano previa um flow lendo a `APP.BACKOUT` e gravando na DLQ com o motivo. O lab grava na DLQ pelo Catch do proprio flow, com motivo e classificacao. A `APP.BACKOUT` ficou como rede de seguranca do MQ, para quando o proprio tratamento de erro falha (exp E).
 - **Duas filas de erro com papeis distintos.** `APP.BACKOUT` / `APP.REQ.BACKOUT`: o MQ desvia, sem motivo, apos `BOTHRESH`. `APP.DLQ` / `APP.REQ.ERRO`: o flow grava, com motivo, original e classificacao.
