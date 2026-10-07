@@ -391,3 +391,10 @@ ibmint deploy --input-bar-file C:\temp\OrderProcessing.bar --output-host localho
 - Projeto 3: **concluido**. Criterio de pronto atingido em 04/10 (teste final 3x); ambiente reproduzivel provado pelo CI em 05/10; documentacao fechada em 06/10.
 - Pendencias do Projeto 3 deslocadas: Frente D (instancias/replicas, ordem, concorrencia da deduplicacao) vai para o Projeto 5; Frente E (pub/sub) apos o P5-1; comparativo WSO2 MI opcional.
 - Proximo: Projeto 5 (P5-0: BAR gerado a partir do repositorio, em Linux, sem Toolkit).
+
+## Atualizacao 06/10 — versoes fixadas e decisoes
+- MQ servidor: 10.0.0.0 (nivel p1000-L260522), imagem fixada pelo digest sha256:2cb02e79... no compose, no CI e no Terraform.
+- MQ cliente no Windows: 9.4.0.26 (cliente 9.4 com servidor 10.0 validado pelo teste final de 04/10).
+- authorities.sh reproduz o MQ real: qmgr '+connect +inq +setall'; APP.** '+get +put +inq +browse +passall +setall' (drift corrigido em 05/10, 7a1d785).
+- A imagem de desenvolvedor da ao principal 'app' 'get browse put inq' no perfil DEV.**, sem passall: o desvio para a DEADQ falha com 2035 (exp R3a).
+- Decisao em aberto (Projeto 11): dar +put +passall na DEV.DEAD.LETTER.QUEUE como defesa em profundidade, alem de exigir BOQNAME em toda fila de entrada (ja barrado no CI).

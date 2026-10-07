@@ -1,6 +1,6 @@
 services:
   mq:
-    image: icr.io/ibm-messaging/mq:latest
+    image: icr.io/ibm-messaging/mq@sha256:2cb02e7991ac9fc44d10ba4e353abdc1402ec1667243b74a4574df5f274d7907
     container_name: qm1
     environment:
       LICENSE: accept
