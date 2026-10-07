@@ -1,0 +1,5 @@
+# Revisado em 06/10: falso positivo da regra generic-api-key.
+# O valor e o marcador "troque-me-8-chars" do .env.example, nao uma senha.
+# As senhas reais vivem no .env, que nunca foi versionado (.gitignore: .env*).
+9884b35ba6bcb045dea3b117c4262d1bae13e6a1:.env.example:generic-api-key:2
+9884b35ba6bcb045dea3b117c4262d1bae13e6a1:.env.example:generic-api-key:3
