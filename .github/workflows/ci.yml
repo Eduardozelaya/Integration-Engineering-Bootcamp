@@ -71,3 +71,14 @@ jobs:
           T2=$(date +%s%3N)
           echo "D-T0 no runner do GitHub: gravar 100 = $((T1-T0)) ms | ler 100 = $((T2-T1-15000)) ms (descontada a espera de 15 s do amqsget)" \
             | tee -a "$GITHUB_STEP_SUMMARY"
+
+  segredos:
+    name: gitleaks (historico inteiro)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:v8.30.1 git --redact -v .
