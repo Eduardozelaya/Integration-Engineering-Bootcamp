@@ -45,7 +45,7 @@ As marcas ficam numa `SHARED ROW` do ESQL, em memoria do servidor:
 
 | Janela | O que acontece | Medido? | Mitigacao |
 |---|---|---|---|
-| verificacao e marca em blocos `ATOMIC` separados | com instancias adicionais, duas copias do mesmo pedido podem verificar antes de qualquer uma marcar, e as duas passam | nao (D-T3, no Projeto 5) | um unico bloco atomico, ou a marca no banco |
+| verificacao e marca em blocos `ATOMIC` separados | com instancias adicionais, duas copias do mesmo pedido podem verificar antes de qualquer uma marcar, e as duas passam | nao: mascarada pelo limite de 1 tps do modo developer (D-T1) | um unico bloco atomico, ou a marca no banco |
 | replicas (pods) | cada processo tem a propria memoria: a duplicata passa se cair numa replica diferente da do original | nao (Projeto 5) | marca num armazenamento compartilhado |
 | redeploy ou reinicio | a memoria some e uma duplicata posterior passa | sim (D3) | marca persistente |
 | falha no commit do MQ depois da marca | a saida e desfeita, mas a marca fica; na reentrega, o pedido e tratado como duplicata e nunca e processado | nao (analise) | marca na mesma transacao da saida |

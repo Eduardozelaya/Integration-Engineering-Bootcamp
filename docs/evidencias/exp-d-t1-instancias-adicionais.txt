@@ -116,3 +116,8 @@ execucao 5: fora de ordem = 0
 # Fases da fila: validos ~1 msg/s; transitorios ~1 msg a cada 3 s (3 entregas = 3 transacoes); resto ~1 msg/s.
 # Conta: 70 + 15x3 + 15 + 10 = 140 transacoes a 1 tps = ~140 s (+3 s de espera do script) = 143 s.
 # Em producao (licenca), as mesmas 3 instancias aumentariam a vazao; o limite e do modo developer.
+# ===== LIMITACAO DO AMBIENTE (07/10)
+# 0 fora de ordem com 3 leitores NAO prova que a ordem e preservada: o limite de 1 tps serializa o flow,
+#   e as 3 threads nunca processam ao mesmo tempo. A ordem se mantem por acidente.
+# Pelo mesmo motivo, a janela de concorrencia da deduplicacao (D-T3) fica mascarada: duas copias do mesmo
+#   pedido nunca se sobrepoem. D-T2 e D-T3 nao podem ser provados em modo developer.
