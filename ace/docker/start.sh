@@ -2,7 +2,7 @@
 # Inicializacao do container do ACE: a configuracao de ambiente entra aqui, nao na imagem.
 set -eo pipefail
 # shellcheck disable=SC1091
-. /opt/ibm/ace-12/server/bin/mqsiprofile > /dev/null
+command -v IntegrationServer > /dev/null || { set +e; . /opt/ibm/ace-12/server/bin/mqsiprofile > /dev/null; set -e; }
 WD=/home/aceuser/ace-server
 : "${MQ_APP_PASSWORD:?defina MQ_APP_PASSWORD (vem do .env, nunca da imagem)}"
 # A policy do repositorio aponta para localhost (o lab); no container, o MQ e outro servico.

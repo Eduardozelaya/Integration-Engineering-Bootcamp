@@ -9,7 +9,7 @@ REPO="$(git rev-parse --show-toplevel)"
 CTX="$HOME/.cache/ace-image-ctx"   # no mesmo disco do ACE: permite hardlinks
 rm -rf "$CTX" && mkdir -p "$CTX/src/ws" "$CTX/ace"
 # shellcheck disable=SC1091
-. "$ACE_DIR/server/bin/mqsiprofile" > /dev/null
+command -v ibmint > /dev/null || { set +e; . "$ACE_DIR/server/bin/mqsiprofile" > /dev/null; set -e; }
 
 echo "== 1. BAR do commit $(git -C "$REPO" rev-parse --short HEAD) (git archive, LF, sem Toolkit)"
 git -C "$REPO" archive HEAD ace | tar -x -C "$CTX/src"
