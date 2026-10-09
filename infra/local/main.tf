@@ -47,7 +47,8 @@ resource "docker_volume" "dados" {
 resource "docker_container" "qm" {
   name   = "qm1-tf"
   image  = docker_image.mq.image_id
-  memory = 1024
+  memory      = 1024
+  memory_swap = 1024 # igual a memory = sem swap (como no Kubernetes). Sem esta linha o Docker poe 2x e o plan nunca fica limpo
 
   env = [
     "LICENSE=accept",
