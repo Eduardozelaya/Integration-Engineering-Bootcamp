@@ -1,0 +1,29 @@
+# P5-1a - servidor ACE nativo em Linux (WSL): work dir proprio, BAR do Linux, credenciais mq::mqcreds | 07/10/2026
+# work dir: ~/ace-work/LAB_LINUX (mqsicreateworkdir + ibmint deploy --output-work-directory, servidor desligado)
+# credenciais: mqsisetdbparms -w ... -n mq::mqcreds -u app (senha vinda do .env); mqsireportdbparms: BIP8180I
+# 1a tentativa: BIP2684E (MQ libraries not available): o ACE em Linux precisa do cliente MQ.
+#   Mesmo erro da cadeia de 18/09 no Windows: dependencia instalada a mao, nunca registrada.
+# correcao: cliente MQ redistribuivel 9.4.0.26 (LTS, o mesmo do Windows), de public.dhe.ibm.com,
+#   em ~/mqclient, com MQ_INSTALLATION_PATH e LD_LIBRARY_PATH. Versao escolhida pelo nome, nao 'a mais recente'
+#   (o maior numero da linha 9.4 seria o 9.4.5.1, da linha CD).
+===== teste final com o servidor Linux
+# Teste final - execucao 6 | orderId na faixa 6000 | 2026-10-07T16:44:06-03:00
+# portao: IPPROCS(1), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 19:44:06 UTC
+>>> APP.IN vazia apos ~143 s
+===== conferencias
+  ok      APP.OUT: 70
+  ok      APP.DLQ: 30
+  ok      APP.DUP: 10
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  ok      orderId repetidos na OUT: 0
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: PASSOU
+===== trace
+# o node Trace gravou em '/home/zelaya/mqclient/C:\temp\catch-trace.txt': o caminho de Windows virou o NOME
+#   de um arquivo, relativo a pasta onde o servidor foi iniciado. O ACE nao traduz o caminho.
+# os caminhos sao propriedades configuraveis (PassThrough#RegistrarTentativa.filePath,
+#   ConsultarPedido#RegistrarErro.filePath): viram override por ambiente no P5-1b.
