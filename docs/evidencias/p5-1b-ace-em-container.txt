@@ -1,0 +1,42 @@
+# P5-1b - ACE 12.0.12.27 em container: imagem integration-lab/ace:12.0.12.27-dev | 2026-10-09T00:20:02-03:00
+# construida por scripts/build-ace-image.sh; ACE e cliente MQ por contextos nomeados do BuildKit (fora do git)
+===== imagem
+IMAGE                                ID             DISK USAGE   CONTENT SIZE   EXTRA
+integration-lab/ace:12.0.12.27-dev   42f625ab8884       5.75GB         1.58GB   U    
+commit de origem: a0129ee
+# DISK USAGE 5,75 GB = 1,58 GB comprimidos + 4,17 GB descompactados. Sem o Toolkit (1,9 GB).
+===== inicializacao do container (docker run --network integration-lab_default -e MQ_HOST=qm1 -e MQ_APP_PASSWORD=...)
+<queueManagerHostname>qm1</queueManagerHostname>
+2026-10-09 03:14:49.173880: BIP1990I: Integration server 'ace-server' starting initialization; version '12.0.12.27' (64-bit) 
+2026-10-09 03:14:59.496684: BIP2269I: Deployed resource 'ConsultarPedido' (uuid='ConsultarPedido',type='MessageFlow') started successfully. 
+2026-10-09 03:14:59.497040: BIP2269I: Deployed resource 'PassThrough' (uuid='PassThrough',type='MessageFlow') started successfully. 
+2026-10-09 03:15:00.730052: BIP1991I: Integration server has finished initialization. 
+===== teste final com o ACE em container
+# Teste final - execucao 7 | orderId na faixa 7000 | 2026-10-09T00:15:41-03:00
+# portao: IPPROCS(1), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 03:15:41 UTC
+>>> APP.IN vazia apos ~143 s
+===== conferencias
+  ok      APP.OUT: 70
+  ok      APP.DLQ: 30
+  ok      APP.DUP: 10
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  ok      orderId repetidos na OUT: 0
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: PASSOU
+===== trace dentro do container (caminho do override)
+total 16
+drwxr-xr-x 1 aceuser mqbrkrs 4096 Oct  9 03:16 .
+drwxr-x--- 1 aceuser mqbrkrs 4096 Oct  9 03:08 ..
+-rw-rw---- 1 aceuser mqbrkrs 2850 Oct  9 03:17 catch-trace.txt
+# ===== ANALISE
+# Dentro da imagem: ACE, cliente MQ, BAR implantado (iguais em todo ambiente).
+# Fora da imagem: host do MQ (MQ_HOST, ajustado na policy pelo start.sh) e senha (MQ_APP_PASSWORD -> mqsisetdbparms).
+# O override do host da policy pelo ibmint 'funcionou' mas gravou no broker.xml da application: sem efeito.
+#   Policy e application tem ciclos de vida distintos; o host passou a ser ajustado na inicializacao.
+# Tropecos do build: mqsiprofile recusa repeticao (retorna 1 sob set -e); hardlink negado para arquivos
+#   de dono root (protected_hardlinks=1) -> contextos nomeados do BuildKit; grupo mqbrkrs so vale apos wsl --shutdown.
+# Ressalva de seguranca: a senha passada com -e aparece em 'docker inspect'. Producao: secret (Projeto 6, P5-4).
