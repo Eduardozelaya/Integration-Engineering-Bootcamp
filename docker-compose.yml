@@ -13,6 +13,12 @@ services:
     mem_limit: 1g
     volumes:
       - mqdata:/mnt/mqm
+    # "pronto", nao so "iniciado": o ACE so liga depois disto passar (P5-3)
+    healthcheck:
+      test: ["CMD", "chkmqready"]
+      interval: 5s
+      retries: 30
+      start_period: 20s
 
   mock:
     image: wiremock/wiremock:latest
@@ -23,6 +29,24 @@ services:
     mem_limit: 256m
     volumes:
       - ./mock:/home/wiremock
+
+  # ACE em container (P5-1b/P5-3). Imagem local, gerada por scripts/build-ace-image.sh:
+  # nao esta em registro publico (licenca de desenvolvedor), por isso fica num profile.
+  # Sobe com: docker compose --profile ace up -d ace   (depois do up.sh: filas e permissoes primeiro)
+  ace:
+    image: integration-lab/ace:12.0.12.27-dev
+    container_name: ace
+    profiles: ["ace"]
+    environment:
+      MQ_HOST: qm1
+      MQ_APP_PASSWORD: ${MQ_APP_PASSWORD}
+    ports:
+      - "7601:7600"
+      - "7801:7800"
+    mem_limit: 1g
+    depends_on:
+      mq:
+        condition: service_healthy
 
 volumes:
   mqdata:

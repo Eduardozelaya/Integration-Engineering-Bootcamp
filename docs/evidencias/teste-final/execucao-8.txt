@@ -1,0 +1,15 @@
+# Teste final - execucao 8 | orderId na faixa 8000 | 2026-10-11T14:46:31-03:00
+# portao: IPPROCS(1), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 17:46:31 UTC
+>>> APP.IN vazia apos ~145 s
+===== conferencias
+  ok      APP.OUT: 70
+  ok      APP.DLQ: 30
+  ok      APP.DUP: 10
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  ok      orderId repetidos na OUT: 0
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: PASSOU

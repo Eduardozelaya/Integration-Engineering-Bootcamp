@@ -1,0 +1,38 @@
+# P5-3 - ACE como servico do compose (profile 'ace', depends_on mq service_healthy) | 2026-10-11T14:54:19-03:00
+===== servicos
+padrao:      mock mq 
+com profile: mock mq ace 
+ace	Up 8 minutes
+qm1	Up 25 minutes (healthy)
+mock	Up 33 minutes (healthy)
+===== ordem de subida (docker compose --profile ace up -d ace)
+ ✔ Container qm1 Healthy   0.6s
+ ✔ Container ace Started   0.8s
+===== inicializacao do ace
+<queueManagerHostname>qm1</queueManagerHostname>
+2026-10-11 17:46:05.813276: BIP1990I: Integration server 'ace-server' starting initialization; version '12.0.12.27' (64-bit) 
+2026-10-11 17:46:13.145379: BIP2269I: Deployed resource 'ConsultarPedido' (uuid='ConsultarPedido',type='MessageFlow') started successfully. 
+2026-10-11 17:46:13.145577: BIP2269I: Deployed resource 'PassThrough' (uuid='PassThrough',type='MessageFlow') started successfully. 
+2026-10-11 17:46:14.087502: BIP1991I: Integration server has finished initialization. 
+===== teste final
+# Teste final - execucao 8 | orderId na faixa 8000 | 2026-10-11T14:46:31-03:00
+# portao: IPPROCS(1), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 17:46:31 UTC
+>>> APP.IN vazia apos ~145 s
+===== conferencias
+  ok      APP.OUT: 70
+  ok      APP.DLQ: 30
+  ok      APP.DUP: 10
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  ok      orderId repetidos na OUT: 0
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: PASSOU
+# ===== ANALISE
+# healthcheck do mq (chkmqready): 'pronto' em vez de 'iniciado'; depends_on service_healthy segura o ace.
+# profile 'ace': 'docker compose up' sobe so mq e mock (quem clona sem a imagem nao ve erro; o up.sh aplica
+#   filas e permissoes antes). O ace sobe com 'docker compose --profile ace up -d ace'.
+# Saudavel = queue manager pronto, NAO configuracao aplicada: num volume novo, as filas APP.* e as
+#   permissoes so existem depois do up.sh. Este lab nao exercita isso (o volume ja tem as filas): exp P5-3b.
