@@ -1,0 +1,27 @@
+# P5-4a - cluster Kubernetes local (kind) | 2026-10-11T16:13:49-03:00
+# ferramentas (conferidas por sha256): kubectl v1.37.1 | kind v0.33.0
+# WSL: memory=4GB (Windows com 8 GB: mantido). Lab parado durante o P5-4.
+===== consumo real do lab, antes de parar (docker stats)
+ace 211 MiB / 1 GiB | qm1 320 MiB / 1 GiB | mock 109 MiB / 256 MiB
+===== criacao: kind create cluster --config infra/kind/cluster.yaml
+real 1m55s (com o download de kindest/node:v1.37.0); 1 container: lab-control-plane
+contexto: kind-lab
+===== o cluster
+NAME                STATUS   ROLES           AGE     VERSION
+lab-control-plane   Ready    control-plane   9m21s   v1.37.0
+NAMESPACE            NAME                                        READY   STATUS    RESTARTS   AGE
+kube-system          coredns-559f6c778d-gwp9v                    1/1     Running   0          9m11s
+kube-system          coredns-559f6c778d-phclq                    1/1     Running   0          9m11s
+kube-system          etcd-lab-control-plane                      1/1     Running   0          9m18s
+kube-system          kindnet-2rml7                               1/1     Running   0          9m11s
+kube-system          kube-apiserver-lab-control-plane            1/1     Running   0          9m18s
+kube-system          kube-controller-manager-lab-control-plane   1/1     Running   0          9m18s
+kube-system          kube-proxy-v566q                            1/1     Running   0          9m11s
+kube-system          kube-scheduler-lab-control-plane            1/1     Running   0          9m18s
+local-path-storage   local-path-provisioner-75f7fc7dc5-zb8fl     1/1     Running   0          9m11s
+===== memoria
+               total        used        free      shared  buff/cache   available
+Mem:           3.8Gi       1.1Gi        90Mi        13Mi       2.8Gi       2.7Gi
+NAME                MEM USAGE / LIMIT
+lab-control-plane   611.9MiB / 3.825GiB
+# limites planejados (do uso medido): MQ 768Mi, ACE 768Mi
