@@ -1,0 +1,30 @@
+# Exp P5-3b - MQ com volume VAZIO e ACE ligado SEM o up.sh | 2026-10-11T15:21:46-03:00
+# infra/exp/p5-3b-ambiente-novo.yml: projeto 'p53b', qm1-novo :1416 (volume novo), ace-novo :7602; lab intocado
+===== fase A: subida sem filas nem permissoes
+qm1-novo Healthy 10.9s -> ace-novo Started 11.0s
+2026-10-11 18:06:25.232330: BIP2269I: Deployed resource 'ConsultarPedido' (uuid='ConsultarPedido',type='MessageFlow') started successfully. 
+2026-10-11 18:06:25.232528: BIP2269I: Deployed resource 'PassThrough' (uuid='PassThrough',type='MessageFlow') started successfully. 
+2026-10-11 18:06:25.783580: BIP1991I: Integration server has finished initialization. 
+2026-10-11 18:06:26.234328: BIP2666E: Unable to open queue 'APP.REQ' on IBM MQ queue manager 'QM1': completion code 2; reason code 2085. 
+2026-10-11 18:06:26.237672: BIP2666E: Unable to open queue 'APP.IN' on IBM MQ queue manager 'QM1': completion code 2; reason code 2085. 
+2026-10-11 18:08:24.950190: BIP2666E: Unable to open queue 'APP.IN' on IBM MQ queue manager 'QM1': completion code 2; reason code 2085. 
+2026-10-11 18:08:25.000746: BIP2666E: Unable to open queue 'APP.REQ' on IBM MQ queue manager 'QM1': completion code 2; reason code 2085. 
+# filas APP.* no qm1-novo antes da fase B: AMQ8147E (nao existem)
+===== fase B (15:14:10): queues.mqsc aplicado -> IPPROCS(0) por 60 s; nenhuma linha nova no log do ACE
+===== fase C (15:15:20): authorities.sh aplicado -> IPPROCS(1) as 15:15:28 (<= 6 s), sem reiniciar
+===== lado do MQ: recusas de permissao (AMQ8077W) durante a fase B
+     66 'app'
+     33 APP.IN
+     33 APP.REQ
+===== prova de processamento: 1 mensagem valida em APP.IN
+APP.IN   CURDEPTH(0)
+APP.OUT  CURDEPTH(1)
+APP.DLQ  CURDEPTH(0)
+# ===== ANALISE
+# Tres portas: conectar (ok pela imagem dev) -> fila existe (2085) -> permissao (2035).
+# O MQInput tenta abrir a fila periodicamente (~1 tentativa a cada ~2 s por flow: 33 recusas em ~70 s);
+#   o ACE so registrou as 2 primeiras falhas (BIP2666E 2085); as recusas 2035 so aparecem no log do MQ.
+# Recuperacao sem reinicio: IPPROCS(1) em <= 6 s depois das permissoes; mensagem processada (APP.OUT 1).
+# 'Started successfully' + BIP1991I + container Up NAO significam lendo a fila: ~8 min sem processar.
+#   P5-4: a prontidao do ACE precisa olhar a leitura da fila (ex.: IPPROCS), nao so o processo.
+# Previsao: sobe (certo); 2035 (certo, mas no 2o momento: 2085 vem antes); precisa reiniciar (errado).
