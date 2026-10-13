@@ -35,11 +35,11 @@ jobs:
           done
           docker exec qm1 dspmq | grep "(Running)"
 
-      - name: Aplicar queues.mqsc e authorities.sh (igual ao up.sh)
+      - name: Aplicar queues.mqsc e authorities.mqsc (igual ao up.sh e ao cluster)
         run: |
           set -o pipefail
           docker exec -i qm1 runmqsc QM1 < mq/config/queues.mqsc | tee mqsc.log
-          docker exec -i qm1 bash -s -- QM1 < mq/config/authorities.sh
+          docker exec -i qm1 runmqsc QM1 < mq/config/authorities.mqsc
 
       - name: Conferir protecao das filas de entrada (licao do R3a)
         run: |

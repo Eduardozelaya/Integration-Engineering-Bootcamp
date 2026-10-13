@@ -93,7 +93,7 @@ Configuração completa do ambiente, armadilhas conhecidas e comandos de referê
 ```
 ace/apps/          fontes dos flows e do ESQL (sincronizados do workspace por scripts/sync-ace.sh)
 ace/policies/      policies do ACE (conexão MQ)
-mq/config/         queues.mqsc e authorities.sh: fonte da verdade do queue manager
+mq/config/         queues.mqsc e authorities.mqsc: fonte da verdade do queue manager
 scripts/           up.sh, sync-ace.sh
 docs/evidencias/   saídas brutas de cada experimento
 docs/              briefing, log de sessões, notas
