@@ -1,0 +1,55 @@
+# ACE no cluster (P5-4c, versao 1). Imagem local, carregada no no com 'kind load' (nao esta em registro).
+# Usa o Secret mq-credenciais (chave 'app') do MQ, e o Service 'mq' como endereco.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ace-config
+  namespace: lab
+data:
+  MQ_HOST: mq
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ace
+  namespace: lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ace
+  template:
+    metadata:
+      labels:
+        app: ace
+    spec:
+      containers:
+        - name: ace
+          image: integration-lab/ace:12.0.12.27-dev
+          imagePullPolicy: Never
+          env:
+            - name: MQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: ace-config
+                  key: MQ_HOST
+            - name: MQ_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mq-credenciais
+                  key: app
+          ports:
+            - containerPort: 7600
+            - containerPort: 7800
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 250m
+            limits:
+              memory: 768Mi
+          # v1: confere o PROCESSO (a API de administracao), nao a leitura da fila (limitacao do P5-3b)
+          readinessProbe:
+            tcpSocket:
+              port: 7600
+            initialDelaySeconds: 10
+            periodSeconds: 5

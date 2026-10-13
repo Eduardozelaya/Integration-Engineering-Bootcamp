@@ -1,0 +1,17 @@
+# P5-4c (v1) - ACE no cluster kind, lendo o MQ do cluster | 2026-10-12T23:23:39-03:00
+# infra/k8s/ace.yaml: ConfigMap ace-config (MQ_HOST=mq) + Deployment (imagePullPolicy Never; Secret mq-credenciais/app)
+# filas APP.* depois de docker stop/start do no: 9 (PVC); mq-0 RESTARTS 1 (religado pelo Kubernetes)
+===== pods
+NAME                   READY   STATUS    RESTARTS      AGE
+ace-5bb5db66c6-vms7g   1/1     Running   0             5m28s
+mq-0                   1/1     Running   1 (11m ago)   53m
+===== inicializacao do ace (Deployment Available em 15,9 s)
+<queueManagerHostname>mq</queueManagerHostname>
+2026-10-13 02:18:21.638332: BIP2269I: Deployed resource 'ConsultarPedido' (uuid='ConsultarPedido',type='MessageFlow') started successfully. 
+2026-10-13 02:18:21.638494: BIP2269I: Deployed resource 'PassThrough' (uuid='PassThrough',type='MessageFlow') started successfully. 
+2026-10-13 02:18:22.573872: BIP1991I: Integration server has finished initialization. 
+===== leitor da APP.IN no MQ do cluster
+IPPROCS(1)
+# ===== ANALISE
+# Nenhum BIP2666E: o MQ ja nasce com filas e permissoes (P5-4b); a janela do P5-3b nao existe aqui.
+# LIMITACAO: readiness do ACE = porta 7600 (processo), nao a leitura da fila. Sonda honesta: proxima etapa.
