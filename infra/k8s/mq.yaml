@@ -1,0 +1,97 @@
+# IBM MQ no cluster (P5-4b). Mesma imagem (digest) do compose, do CI e do Terraform.
+# Pre-requisitos (criados por fora, nao versionados ou gerados):
+#   Secret  mq-credenciais : chaves 'admin' e 'app' (vindas do .env)
+#   ConfigMap mq-config    : 50-app-filas.mqsc e 51-app-permissoes.mqsc (gerado de mq/config/)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mq
+  namespace: lab
+spec:
+  selector:
+    app: mq
+  ports:
+    - name: mq
+      port: 1414
+      targetPort: 1414
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mq
+  namespace: lab
+spec:
+  serviceName: mq
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mq
+  template:
+    metadata:
+      labels:
+        app: mq
+    spec:
+      containers:
+        - name: mq
+          image: icr.io/ibm-messaging/mq@sha256:2cb02e7991ac9fc44d10ba4e353abdc1402ec1667243b74a4574df5f274d7907
+          env:
+            - name: LICENSE
+              value: accept
+            - name: MQ_QMGR_NAME
+              value: QM1
+            - name: MQ_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mq-credenciais
+                  key: admin
+            - name: MQ_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mq-credenciais
+                  key: app
+          ports:
+            - containerPort: 1414
+            - containerPort: 9443
+          resources:
+            requests:
+              memory: 384Mi
+              cpu: 250m
+            limits:
+              memory: 768Mi
+          startupProbe:
+            exec:
+              command: ["chkmqstarted"]
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            exec:
+              command: ["chkmqready"]
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["chkmqhealthy"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: dados
+              mountPath: /mnt/mqm
+            # um arquivo por vez (subPath): montar a PASTA /etc/mqm esconderia a config da imagem
+            - name: config
+              mountPath: /etc/mqm/50-app-filas.mqsc
+              subPath: 50-app-filas.mqsc
+            - name: config
+              mountPath: /etc/mqm/51-app-permissoes.mqsc
+              subPath: 51-app-permissoes.mqsc
+      volumes:
+        - name: config
+          configMap:
+            name: mq-config
+  volumeClaimTemplates:
+    - metadata:
+        name: dados
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

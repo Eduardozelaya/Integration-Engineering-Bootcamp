@@ -1,0 +1,6 @@
+* Permissoes do principal 'app' em MQSC (P5-4b): o mesmo que mq/config/authorities.sh,
+* aplicado pelo proprio MQ na inicializacao (arquivo em /etc/mqm), sem script externo.
+* +passall +setall: o ACE grava com o contexto da mensagem original e desvia para
+* backout/DEADQ preservando o contexto (erro 5 de 18/09; exp R3a; drift de 05/10).
+SET AUTHREC OBJTYPE(QMGR) PRINCIPAL('app') AUTHADD(CONNECT, INQ, SETALL)
+SET AUTHREC PROFILE('APP.**') OBJTYPE(QUEUE) PRINCIPAL('app') AUTHADD(GET, PUT, INQ, BROWSE, PASSALL, SETALL)

@@ -1,0 +1,33 @@
+# P5-4b - IBM MQ no cluster kind, ja configurado (filas e permissoes em .mqsc), sem up.sh | 2026-10-12T22:47:38-03:00
+# infra/k8s/mq.yaml: Service + StatefulSet (digest do lab), PVC 1Gi, sondas chkmqstarted/ready/healthy
+# Secret mq-credenciais (do .env, fora do git); ConfigMap mq-config gerado de mq/config/*.mqsc (subPath)
+===== linha do tempo (eventos)
+pull da imagem: 5m14s (502046507 bytes, 1a vez no no); Started -> 1/1 Running em ~10 s
+startupProbe falhou 2x nos primeiros segundos (exit 71 = ainda nao iniciado): esperado
+===== conferencias
+filas APP.*: 9
+BOQNAME(APP.BACKOUT)
+BOTHRESH(3)
+MCAUSER(app)
+profile:     APP.**
+authority:   get browse put inq passall setall
+authority:   inq connect setall
+authority:   none
+===== /etc/mqm (arquivos da imagem + os dois do ConfigMap, por subPath)
+lrwxrwxrwx 1 1001 root   16 Aug 24 17:20 10-dev.mqsc -> /run/10-dev.mqsc
+-rw-r--r-- 1 1001 root 2554 Aug 24 17:12 10-dev.mqsc.tpl
+lrwxrwxrwx 1 1001 root   16 Aug 24 17:20 15-tls.mqsc -> /run/15-tls.mqsc
+-rw-r--r-- 1 1001 root  786 Aug 24 17:12 15-tls.mqsc.tpl
+lrwxrwxrwx 1 1001 root   20 Aug 24 17:20 20-dev-tls.mqsc -> /run/20-dev-tls.mqsc
+-rw-r--r-- 1 1001 root  823 Aug 24 17:12 20-dev-tls.mqsc.tpl
+-rw-r--r-- 1 root root 1031 Oct 13 01:30 50-app-filas.mqsc
+-rw-r--r-- 1 root root  522 Oct 13 01:30 51-app-permissoes.mqsc
+===== memoria
+NAME                MEM USAGE / LIMIT
+lab-control-plane   1.043GiB / 3.825GiB
+# ===== ANALISE
+# Ready no cluster = pronto para a APLICACAO: os .mqsc de /etc/mqm rodam antes do MQ se declarar pronto.
+#   Resolve, do lado do MQ, a janela do P5-3b (MQ 'healthy' sem as filas APP.*).
+# SET AUTHREC = setmqaut, com passall e setall. authorities.sh e authorities.mqsc coexistem por ora:
+#   proximo passo e fazer do .mqsc a fonte unica (up.sh e CI), para nao abrir um drift novo.
+# subPath por arquivo: montar a pasta /etc/mqm esconderia 10-dev/15-tls/20-dev-tls (canal DEV.APP.SVRCONN).
