@@ -42,3 +42,21 @@ Opção D, como **readiness** (nunca liveness), com um usuário próprio de cons
   APP.IN), lendo cada recusa, para o `monitor` receber so o necessario.
 - Efeito colateral positivo: o `app` nao consegue consultar o queue manager; a imagem de desenvolvedor
   nao lhe da mais do que o authorities.mqsc.
+
+## Permissoes minimas da sonda (medidas em 14/10)
+Cadeia descoberta com o `app` como cobaia, uma permissao por vez, e desfeita no fim
+(evidencia: `docs/evidencias/sonda-permissoes-descobertas.txt`):
+
+| Objeto | Permissao | Recusa aparece em |
+| --- | --- | --- |
+| `SYSTEM.ADMIN.COMMAND.QUEUE` | PUT | log do MQ (AMQ8077W) |
+| `SYSTEM.MQSC.REPLY.QUEUE` (modelo) | GET, BROWSE, INQ | log do MQ (AMQ8077W) |
+| `APP.IN` (so ela, nao `APP.**`) | DSP | resposta do comando (AMQ8135E) |
+| queue manager | DSP | resposta do comando (AMQ8135E) |
+
+- As recusas do command server (DSP) nao aparecem no log de erros do MQ: so na resposta ao cliente.
+- O IP do pod muda quando o pod e recriado (10.244.0.5 -> 10.244.0.3 apos stop/start do no): a sonda
+  precisa do IP atual pela Downward API, nunca de um valor fixo.
+- `AUTHRMV` deixa o registro vazio ('none'); `DELETE AUTHREC` o apaga. A limpeza usou os dois.
+- Falta: como a imagem do MQ permite acrescentar o usuario `monitor` (autenticacao por htpasswd,
+  `MQ_CONNAUTH_USE_HTP=true`, mas o arquivo nao e visivel no container). Consultar a documentacao da imagem.

@@ -1,0 +1,20 @@
+# Cadeia de permissoes para 'runmqsc -c ... DISPLAY QSTATUS(APP.IN) TYPE(HANDLE) CONNAME' | 2026-10-14T23:19:43-03:00
+# Metodo: o 'app' como cobaia, uma permissao por vez, lendo cada recusa; tudo removido e os registros apagados no fim.
+# porta 1  PUT              QUEUE SYSTEM.ADMIN.COMMAND.QUEUE  (recusa no log do MQ: AMQ8077W)
+# porta 2  GET,BROWSE,INQ   QUEUE SYSTEM.MQSC.REPLY.QUEUE     (AMQ8077W: get/browse/inq)
+# porta 3  DSP              QUEUE APP.IN                      (recusa na RESPOSTA: AMQ8135E, nada no log)
+# porta 3b DSP              QMGR  QM1                         (idem)
+# Minimizacao: sem o DSP na APP.IN, volta o AMQ8135E -> as duas sao necessarias.
+# Com as 4: AMQ8450I, CONNAME(10.244.0.3) = IP atual do pod do ACE (era 10.244.0.5 antes do stop/start do no).
+# Limpeza: AUTHRMV deixa registros 'none'; DELETE AUTHREC os apaga (AMQ8863I).
+===== permissoes do app depois da limpeza
+profile:     self	authority:   inq connect setall
+profile:     @class	authority:   none
+profile:     @class	authority:   none
+profile:     @class	authority:   none
+profile:     DEV.APP.MODEL.QUEUE	authority:   get browse put inq dsp
+profile:     APP.**	authority:   get browse put inq passall setall
+profile:     DEV.**	authority:   get browse put inq
+profile:     DEV.**	authority:   pub sub
+# @class = registros internos do MQ por tipo de objeto (explica o 'authority: none' extra do P5-4b).
+# DEV.* = configuracao de desenvolvedor da imagem; o app tem acesso a filas que a aplicacao nao usa (Projeto 11).
