@@ -31,3 +31,14 @@ Opção D, como **readiness** (nunca liveness), com um usuário próprio de cons
 - Custo: um usuário e permissões de consulta a mais no MQ (dsp; put na fila de comandos; fila de resposta),
   descritos em `authorities.mqsc`. Menor privilégio aprofundado no Projeto 11.
 - Dependência nova da sonda: o canal e o listener do MQ (os mesmos que o ACE já usa).
+
+## Achados de 14/10 (antes de implementar)
+- A imagem do MQ autentica por arquivo htpasswd (`MQ_CONNAUTH_USE_HTP=true`); `app` nao e usuario do
+  sistema operacional. Criar o `monitor` = uma linha a mais no htpasswd (falta descobrir onde a imagem
+  gera o arquivo e se aceita um arquivo proprio, montado por Secret), e nao uma imagem derivada.
+- `runmqsc -c -u app` a partir do pod do ACE: a conexao e a senha passam; o comando e recusado
+  (AMQ8135E). No MQ: AMQ8077W, 'app' sem autoridade na `SYSTEM.ADMIN.COMMAND.QUEUE` (put).
+  E a primeira porta de uma cadeia: abrir uma por vez (fila de comandos -> fila de resposta -> dsp na
+  APP.IN), lendo cada recusa, para o `monitor` receber so o necessario.
+- Efeito colateral positivo: o `app` nao consegue consultar o queue manager; a imagem de desenvolvedor
+  nao lhe da mais do que o authorities.mqsc.
