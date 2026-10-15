@@ -10,9 +10,11 @@ APPPW=$(grep "^MQ_APP_PASSWORD=" .env | cut -d= -f2 | tr -d '\r\n')
 REST=https://localhost:9443/ibmmq/rest/v3/messaging/qmgr/QM1/queue
 CURL=(curl -sk -u "app:$APPPW" -H "ibm-mq-rest-csrf-token: x")
 
-mq()     { printf '%s\n' "$@" | docker exec -i qm1 runmqsc QM1; }
+# Como falar com o MQ: compose (padrao) ou cluster: MQ_EXEC="kubectl exec -i -n lab mq-0 --" (P5-4d)
+MQ_EXEC="${MQ_EXEC:-docker exec -i qm1}"
+mq()     { printf '%s\n' "$@" | $MQ_EXEC runmqsc QM1; }
 prof()   { mq "DISPLAY QSTATUS($1) CURDEPTH" | grep -o "CURDEPTH([0-9]*)" | tr -dc '0-9'; }
-zerar()  { docker exec qm1 bash -c "dmpmqmsg -m QM1 -I $1 -f stdout" > /dev/null 2>&1; }
+zerar()  { $MQ_EXEC bash -c "dmpmqmsg -m QM1 -I $1 -f stdout" < /dev/null > /dev/null 2>&1; }
 drenar() { : > "$2"; while :; do
              r=$("${CURL[@]}" -X DELETE "$REST/$1/message?wait=500" -w $'\n%{http_code}')
              [ "${r##*$'\n'}" = "200" ] || break
@@ -37,7 +39,7 @@ for i in $(seq 1 10);  do echo "{\"orderId\":\"$((B+i))\",\"valor\":$((B+i))}"; 
   echo "# Teste final - execucao $RUN | orderId na faixa $B | $(date -Is)"
   echo "# portao: $IPP, filas zeradas | carga: $(wc -l < "$CARGA") mensagens"
   T0=$(date +%s)
-  docker exec -i qm1 /opt/mqm/samp/bin/amqsput APP.IN QM1 < "$CARGA" > /dev/null
+  $MQ_EXEC /opt/mqm/samp/bin/amqsput APP.IN QM1 < "$CARGA" > /dev/null
   echo ">>> carga enviada em $(date -u +%T) UTC"
 
   # espera a APP.IN esvaziar e ficar vazia por 3 s seguidos (limite: 300 s)

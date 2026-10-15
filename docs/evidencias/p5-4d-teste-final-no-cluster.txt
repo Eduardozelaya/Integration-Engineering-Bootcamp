@@ -1,0 +1,42 @@
+# P5-4d - teste final contra o cluster (execucao 9) e regressao no compose (execucao 10) | 2026-10-14T22:25:48-03:00
+# scripts/teste-final.sh: MQ_EXEC (padrao 'docker exec -i qm1'; cluster 'kubectl exec -i -n lab mq-0 --')
+# O script fala com o MQ por DOIS caminhos: MQ_EXEC (carga, zerar, DISPLAY, portao) e a API REST
+#   em localhost:9443 (le o conteudo das filas). No cluster: kubectl port-forward pod/mq-0 1414 9443.
+===== execucao 9 - cluster kind
+# Teste final - execucao 9 | orderId na faixa 9000 | 2026-10-14T22:14:27-03:00
+# portao: IPPROCS(1), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 01:14:27 UTC
+>>> APP.IN vazia apos ~144 s
+===== conferencias
+  ok      APP.OUT: 70
+  ok      APP.DLQ: 30
+  ok      APP.DUP: 10
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  ok      orderId repetidos na OUT: 0
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: PASSOU
+===== execucao 10 - compose, sem MQ_EXEC (regressao do padrao e do up.sh com authorities.mqsc)
+# Teste final - execucao 10 | orderId na faixa 10000 | 2026-10-14T22:21:06-03:00
+# portao: IPPROCS(1), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 01:21:07 UTC
+>>> APP.IN vazia apos ~144 s
+===== conferencias
+  ok      APP.OUT: 70
+  ok      APP.DLQ: 30
+  ok      APP.DUP: 10
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  ok      orderId repetidos na OUT: 0
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: PASSOU
+# up.sh agora termina com a saida do runmqsc: '2 MQSC commands read' (fonte unica de 12/10 validada no lab)
+# ===== ANALISE
+# O mesmo script aprova os dois ambientes: 9/9 nos dois, ~144 s nos dois.
+# Tempo igual ao das execucoes 1-8: o limite e do runtime (1 tps, modo developer), nao da infraestrutura.
+# Dependencia de rede do teste: a API REST (curl -k, certificado de teste). Num cluster real, exposta
+#   por Service/Ingress com TLS verificado, e nao por port-forward.
