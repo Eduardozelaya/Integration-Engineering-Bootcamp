@@ -1,0 +1,15 @@
+# Teste final - execucao 11 | orderId na faixa 11000 | 2026-10-14T22:34:52-03:00
+# portao: IPPROCS(2), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 01:34:52 UTC
+>>> APP.IN vazia apos ~72 s
+===== conferencias
+  FALHOU  APP.OUT: 74 (esperado 70)
+  ok      APP.DLQ: 30
+  FALHOU  APP.DUP: 6 (esperado 10)
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  FALHOU  orderId repetidos na OUT: 4 (esperado 0)
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: FALHOU (3 conferencias)

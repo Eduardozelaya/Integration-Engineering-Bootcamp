@@ -1,0 +1,29 @@
+# Exp P5-4e - 2 replicas do ACE no cluster: vazao e deduplicacao em memoria | 2026-10-14T22:44:54-03:00
+# kubectl scale deployment ace --replicas=2 -> IPPROCS(2); portao do teste ajustado para IPPROCS(2) (copia em /tmp)
+===== teste final, execucao 11
+# Teste final - execucao 11 | orderId na faixa 11000 | 2026-10-14T22:34:52-03:00
+# portao: IPPROCS(2), filas zeradas | carga: 110 mensagens
+>>> carga enviada em 01:34:52 UTC
+>>> APP.IN vazia apos ~72 s
+===== conferencias
+  FALHOU  APP.OUT: 74 (esperado 70)
+  ok      APP.DLQ: 30
+  FALHOU  APP.DUP: 6 (esperado 10)
+  ok      APP.BACKOUT: 0
+  ok      soma OUT+DLQ+DUP+BACKOUT: 110
+  FALHOU  orderId repetidos na OUT: 4 (esperado 0)
+  ok      DLQ TRANSITORIO c/ 3 tentativas: 15
+  ok      DLQ PERMANENTE c/ 1 tentativa: 15
+  ok      DLQ com originalBruto: 30
+===== resultado: FALHOU (3 conferencias)
+===== duplicatas que passaram (orderId repetidos na APP.OUT)
+11001 11002 11005 11006 
+# ===== ANALISE
+# Tempo ~72 s (1 replica: ~144 s): o limite de 1 tps e POR SERVIDOR; 2 pods = 2 tps.
+#   No D-T1, 3 threads no MESMO servidor nao mudaram nada (143 s): escala horizontal x vertical.
+# Deduplicacao em memoria (SHARED) por pod: o MQ entrega ao leitor livre, sem afinidade por orderId.
+#   Cada duplicata cai no pod do original com ~50%: esperado ~5 de 10; medido 4 (3 a 7 em ~89% dos casos).
+#   Com N replicas, a fracao que passa tende a (N-1)/N. Confirma a secao 6 da idempotencia (27/09).
+# Transitorios: 15 com 3 tentativas mesmo trocando de pod: o BackoutCount e do MQ, nao do processo.
+# Solucoes: estado compartilhado (chave unica em banco, cache), afinidade por orderId, idempotencia no destino.
+# Previsao: 75 s (certo), metade das duplicatas (certo: 4), transitorios iguais (certo).
