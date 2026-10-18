@@ -81,6 +81,6 @@ Recriado do zero até o MQ saudável, sem nenhum arquivo copiado do lab original
 - `jq` e `shellcheck` não vinham instalados: `sudo apt-get install -y jq shellcheck`.
 - Máquina emprestada: tudo numa pasta só (`~/provisorio`), com um `env.sh` carregado em cada terminal
   (chave SSH própria via `GIT_SSH_COMMAND`, `KUBECONFIG`, `ACE_DIR`, `MQC_DIR`) e uma lista de limpeza.
-  O autor do git é configurado só no repositório, copiado do último commit (`git log -1 --format=%ae`).
+  A chave SSH vai no repositório (`git config core.sshCommand`), não só no `env.sh`: uma aba sem o `source` não a usa (push recusado em 18/10). O autor do git é configurado só no repositório, copiado do último commit (`git log -1 --format=%ae`).
 - Marco 1: volume NOVO, `up.sh` com `authorities.mqsc`, 9 filas, BOTHRESH(3)/BOQNAME e permissões do app
   idênticas às do CI. Download das imagens: ~4 min.
