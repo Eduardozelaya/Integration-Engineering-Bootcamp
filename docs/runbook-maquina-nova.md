@@ -72,3 +72,15 @@ Teste no cluster: `kubectl port-forward -n lab pod/mq-0 1414:1414 9443:9443 &` e
 - kind:        v0.33.0
 - terraform:   Terraform v1.16.5
 - imagem MQ:   sha256:2cb02e7991ac9fc44d10ba4e353abdc1402ec1667243b74a4574df5f274d7907
+
+## Teste real: notebook secundário (18/10)
+Recriado do zero até o MQ saudável, sem nenhum arquivo copiado do lab original.
+- **Sem `.wslconfig`**, o WSL já usa metade da RAM: 6,6 GiB num notebook de ~13 GB. O arquivo é dispensável aqui.
+- **Docker Desktop (24.0.7) com a WSL integration ligada** no lugar do Engine: nada instalado no sistema,
+  desfaz-se com um interruptor. Compose v2.23.3 e buildx v0.12.0 bastam (depends_on por saúde, contextos nomeados).
+- `jq` e `shellcheck` não vinham instalados: `sudo apt-get install -y jq shellcheck`.
+- Máquina emprestada: tudo numa pasta só (`~/provisorio`), com um `env.sh` carregado em cada terminal
+  (chave SSH própria via `GIT_SSH_COMMAND`, `KUBECONFIG`, `ACE_DIR`, `MQC_DIR`) e uma lista de limpeza.
+  O autor do git é configurado só no repositório, copiado do último commit (`git log -1 --format=%ae`).
+- Marco 1: volume NOVO, `up.sh` com `authorities.mqsc`, 9 filas, BOTHRESH(3)/BOQNAME e permissões do app
+  idênticas às do CI. Download das imagens: ~4 min.
