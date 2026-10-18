@@ -60,3 +60,17 @@ Cadeia descoberta com o `app` como cobaia, uma permissao por vez, e desfeita no 
 - `AUTHRMV` deixa o registro vazio ('none'); `DELETE AUTHREC` o apaga. A limpeza usou os dois.
 - Falta: como a imagem do MQ permite acrescentar o usuario `monitor` (autenticacao por htpasswd,
   `MQ_CONNAUTH_USE_HTP=true`, mas o arquivo nao e visivel no container). Consultar a documentacao da imagem.
+
+## Revisão (18/10): o usuário da sonda
+Pesquisa na fonte da imagem (Dockerfile-server do mq-container e documentação "MQ Advanced for Developers
+container image"):
+- O htpasswd é um serviço de autorização **exclusivo da imagem de desenvolvedor** (`MQ_CONNAUTH_USE_HTP=true`
+  só nela; `false` na imagem de servidor). A documentação descreve apenas os usuários `admin` e `app`.
+- `MQ_ADMIN_PASSWORD` e `MQ_APP_PASSWORD` constam como descontinuadas desde o MQ 9.4.0 (senhas montadas por
+  Secret). No lab (MQ 10.0, fixado por digest) ainda funcionam: risco registrado para uma troca de imagem.
+
+**Decisão revista:** a sonda usa o `app`, com as 4 permissões medidas (PUT na fila de comandos; GET/BROWSE/INQ
+no modelo de resposta; DSP na APP.IN; DSP no queue manager). É um **desvio consciente** do usuário próprio
+de monitoração: a imagem de desenvolvedor não oferece um terceiro usuário. Em produção (imagem não-dev,
+usuários de LDAP ou do sistema), a sonda teria um usuário só de consulta, como decidido originalmente.
+Consequência: o `app`, que lê e grava nas filas, passa a poder consultar o status da APP.IN e do queue manager.
