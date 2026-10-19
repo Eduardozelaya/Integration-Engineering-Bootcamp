@@ -48,6 +48,7 @@ kind create cluster --config infra/kind/cluster.yaml && kubectl create namespace
 # Secret (do .env) e ConfigMap (dos .mqsc): ver docs/evidencias/p5-4b-mq-no-cluster.txt
 kubectl apply -f infra/k8s/mq.yaml
 kind load docker-image integration-lab/ace:12.0.12.27-dev --name lab
+kubectl create configmap ace-sonda -n lab --from-file=pronto.sh=infra/k8s/sonda/pronto.sh   # sonda honesta (ADR 001)
 kubectl apply -f infra/k8s/ace.yaml
 ```
 Teste no cluster: `kubectl port-forward -n lab pod/mq-0 1414:1414 9443:9443 &` e
