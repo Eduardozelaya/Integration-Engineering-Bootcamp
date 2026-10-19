@@ -36,7 +36,7 @@ Conferir: `docker ps` com `qm1 (healthy)`.
 ```bash
 ./scripts/build-ace-image.sh                 # ~5-10 min; imagem de ~1,6 GB comprimida
 docker compose --profile ace up -d ace
-./scripts/teste-final.sh 1
+./scripts/teste-final.sh 12   # um número LIVRE: o script sobrescreve execucao-N
 ```
 Critério: **9/9 PASSOU, ~144 s** (o limite de 1 tps do modo developer).
 
@@ -84,3 +84,8 @@ Recriado do zero até o MQ saudável, sem nenhum arquivo copiado do lab original
   A chave SSH vai no repositório (`git config core.sshCommand`), não só no `env.sh`: uma aba sem o `source` não a usa (push recusado em 18/10). O autor do git é configurado só no repositório, copiado do último commit (`git log -1 --format=%ae`).
 - Marco 1: volume NOVO, `up.sh` com `authorities.mqsc`, 9 filas, BOTHRESH(3)/BOQNAME e permissões do app
   idênticas às do CI. Download das imagens: ~4 min.
+- **Marco 2 (18/10): teste final 9/9 (~146 s) no notebook secundário**, com a imagem do ACE construída nele
+  (Docker Desktop 24.0.7, buildx 0.12). Reprodutibilidade provada: só o repositório, um `.env` novo e
+  downloads públicos. Evidência: `docs/evidencias/teste-final/maquina-nova-1.txt`.
+- **Atenção ao número da execução:** o `teste-final.sh N` grava em `execucao-N*` e **sobrescreve** a
+  evidência histórica de mesmo número. Numa máquina nova, usar um número livre (o próximo era o 12).
