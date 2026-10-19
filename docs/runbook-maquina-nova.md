@@ -96,3 +96,13 @@ Recriado do zero até o MQ saudável, sem nenhum arquivo copiado do lab original
   `Cgroup Version: 1`; kernel do WSL 5.15.133). **Pré-requisito do passo 5: cgroup v2.** Conferir antes:
   `stat -fc %T /sys/fs/cgroup/` deve dar `cgroup2fs`. Contorno temporário a testar: `failCgroupV1: false`
   num arquivo de cluster separado (só a config do kubelet muda; o v1 está em fim de vida).
+- **Marco 3 (19/10): teste final 9/9 (~144 s) no kind do notebook secundário, com cgroup v1.** Contorno:
+  `infra/kind/cluster-cgroupv1.yaml` (`kubeadmConfigPatches` com `failCgroupV1: false`); cluster em 39 s,
+  `failCgroupV1: false` conferido em `/var/lib/kubelet/config.yaml`; MQ e ACE sem reinícios depois da carga.
+  Evidência: `docs/evidencias/teste-final/maquina-nova-2-k8s.txt`.
+- **`/tmp` do Debian 13 é `tmpfs` (RAM, 3,4 GB aqui):** o `kind load` do ACE (~3,6 GB) estourou com
+  `no space left on device`. Solução: `export TMPDIR=$LAB/tmp` (no disco). O `kind load` levou 12 min
+  com o Docker Desktop.
+- **Intervalo entre "Available" e a leitura da fila:** nesta máquina, o ACE ficou `Available` (sonda de
+  porta) alguns segundos antes de abrir a APP.IN (`IPPROCS(0)` logo depois, `(1)` 15 s depois): o caso
+  da ADR 001, medido.

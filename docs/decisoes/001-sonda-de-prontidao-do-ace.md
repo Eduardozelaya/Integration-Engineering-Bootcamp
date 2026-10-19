@@ -74,3 +74,9 @@ no modelo de resposta; DSP na APP.IN; DSP no queue manager). É um **desvio cons
 de monitoração: a imagem de desenvolvedor não oferece um terceiro usuário. Em produção (imagem não-dev,
 usuários de LDAP ou do sistema), a sonda teria um usuário só de consulta, como decidido originalmente.
 Consequência: o `app`, que lê e grava nas filas, passa a poder consultar o status da APP.IN e do queue manager.
+
+## Observação (19/10, notebook secundário)
+O intervalo que a sonda de porta deixa passar apareceu numa máquina mais lenta: o Deployment do ACE ficou
+`Available` e, logo em seguida, o MQ mostrava `IPPROCS(0)`; 15 s depois, `IPPROCS(1)`. Sem erro em
+nenhum dos dois logs: era só a abertura da fila ainda em andamento. A sonda honesta teria mantido o pod
+`NotReady` nesses segundos.

@@ -1,0 +1,14 @@
+# Cluster local para HOSTS COM CGROUP v1 (P5-4, contorno). Padrao do lab: infra/kind/cluster.yaml (cgroup v2).
+# O kubelet do Kubernetes 1.37 recusa iniciar sob cgroup v1 (failCgroupV1: true, provado em 18/10 no
+# notebook secundario: WSL 5.15 + Docker Desktop 24.0.7). Este patch desliga a recusa.
+# TEMPORARIO: o suporte ao cgroup v1 esta em fim de vida no Kubernetes; preferir atualizar o host.
+# Criar: kind create cluster --config infra/kind/cluster-cgroupv1.yaml   Apagar: kind delete cluster --name lab
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: lab
+kubeadmConfigPatches:
+  - |
+    kind: KubeletConfiguration
+    failCgroupV1: false
+nodes:
+  - role: control-plane
