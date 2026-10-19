@@ -89,3 +89,10 @@ Recriado do zero até o MQ saudável, sem nenhum arquivo copiado do lab original
   downloads públicos. Evidência: `docs/evidencias/teste-final/maquina-nova-1.txt`.
 - **Atenção ao número da execução:** o `teste-final.sh N` grava em `execucao-N*` e **sobrescreve** a
   evidência histórica de mesmo número. Numa máquina nova, usar um número livre (o próximo era o 12).
+- **Kubernetes no notebook secundário: o cluster não sobe (18/10).** O `kind create` baixou o nó
+  (kindest/node v1.37.0), mas a API nunca abriu. Causa, pelo log do kubelet (`kind create --retain` +
+  `journalctl -u kubelet`): `failCgroupV1: true` — "kubelet is configured to not run on a host using
+  cgroup v1". A máquina usa **cgroup v1** (`/sys/fs/cgroup` em `tmpfs`; Docker Desktop 24.0.7 com
+  `Cgroup Version: 1`; kernel do WSL 5.15.133). **Pré-requisito do passo 5: cgroup v2.** Conferir antes:
+  `stat -fc %T /sys/fs/cgroup/` deve dar `cgroup2fs`. Contorno temporário a testar: `failCgroupV1: false`
+  num arquivo de cluster separado (só a config do kubelet muda; o v1 está em fim de vida).
