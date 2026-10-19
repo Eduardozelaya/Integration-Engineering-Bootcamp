@@ -68,7 +68,7 @@ LerPedido (MQInput APP.IN) ──► ProcessarPedido (Compute) ──► GravarS
 | 3 | **MQ transacional** — backout, DLQ, idempotência, request/reply, pub/sub | **concluído** (teste final 3×); o ~1 s por mensagem foi explicado (limite da licença, H4); pub/sub segue pendente |
 | 1 | Conector S3/R2 com assinatura AWS SigV4 em Java Compute, Shared Library e JUnit | pendente |
 | 7 | Observabilidade — logs estruturados, OpenTelemetry, Prometheus/Grafana | pendente |
-| 5 | **CI/CD e contêineres** — BAR gerado do git sem Toolkit, imagem do ACE, compose, Kubernetes (`kind`), sonda honesta | **concluído** (9/9 no compose e no cluster); o build do BAR no Actions depende de uma decisão de licença |
+| 5 | **CI/CD e contêineres** — BAR gerado do git sem Toolkit, imagem do ACE, compose, Kubernetes (`kind`), sonda honesta | **concluído** (9/9 no compose e no cluster); o CI valida o código ACE sem o produto ([ADR 002](docs/decisoes/002-build-do-bar-no-ci.md)); BAR e imagem gerados pelo script |
 | 9, 10, 6, 11 | Copybook/DFDL, transação XA com banco, segurança ponta a ponta, TLS no MQ | planejado |
 | 4, 2, 8 | Kafka, gateway (WSO2 APIM × IBM API Connect), capstone | planejado |
 
