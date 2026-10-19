@@ -1,0 +1,22 @@
+# Sonda de prontidao honesta do ACE (ADR 001) no kind do notebook secundario | 2026-10-19T12:07:58-03:00
+# infra/k8s/sonda/pronto.sh (ConfigMap ace-sonda) + readinessProbe exec; POD_IP pela Downward API
+===== permissoes do app na APP.IN (perfil especifico: o generico + DSP)
+profile:     APP.IN
+authority:   get browse put inq dsp passall setall
+profile:     APP.**
+authority:   get browse put inq passall setall
+===== calibracao (dentro do pod, POD_IP=10.244.0.9)
+IP verdadeiro: exit=0 | IP 10.244.0.250: 'sem handle de leitura na APP.IN para 10.244.0.250', exit=1
+===== troca de versao (rolling update), 11:54:49 -> 11:55:17
+novo 0/1 com IPPROCS(1) -> IPPROCS(2) com o novo ainda 0/1 -> novo 1/1 -> antigo sai -> IPPROCS(1)
+# 'lendo' (IPPROCS 2) veio ANTES de 'pronto' (1/1): a fila nunca ficou sem leitor.
+===== cenario do P5-3b: AUTHRMV(GET) na APP.IN + apagar o pod
+12:00:55-12:01:47 novo 0/1 Running, IPPROCS(0); describe: Readiness probe failed (x4): sem handle de leitura na APP.IN para 10.244.0.10
+12:02:00 AUTHADD(GET) -> 12:02:07 IPPROCS(1) e 1/1, restarts=0
+# ===== ANALISE
+# A sonda distingue os dois casos (calibracao), nao deixa buraco na troca de versao, e torna VISIVEL
+#   no Kubernetes o 'ACE started sem ler' que no P5-3b so aparecia no log do MQ.
+# Readiness, nao liveness: sem reinicios; o ACE se reconecta sozinho e a sonda acompanha.
+# Armadilha evitada: o perfil especifico APP.IN substitui o generico APP.** (o OAM nao soma);
+#   ele repete get/browse/put/inq/passall/setall + dsp. Provado reiniciando o ACE (IPPROCS 1).
+# Numa QUEDA (pod apagado), nao ha pod antigo: zero prontos por ~1 min, mas visivel.

@@ -1,6 +1,6 @@
 # 001 — Sonda de prontidão do ACE no Kubernetes
 
-**Situação:** proposta (14/10). Implementação na próxima sessão.
+**Situação:** implementada e provada em 19/10 (notebook secundário): calibração, troca de versão e o cenário do P5-3b. Evidência: `docs/evidencias/sonda-honesta-ace.txt`.
 
 ## Contexto
 A readiness atual do ACE (P5-4c) confere a porta 7600, ou seja, o processo. O P5-3b mostrou um ACE com o

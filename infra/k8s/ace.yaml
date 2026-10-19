@@ -1,5 +1,6 @@
-# ACE no cluster (P5-4c, versao 1). Imagem local, carregada no no com 'kind load' (nao esta em registro).
+# ACE no cluster (P5-4c; sonda honesta: ADR 001). Imagem local, carregada no no com 'kind load'.
 # Usa o Secret mq-credenciais (chave 'app') do MQ, e o Service 'mq' como endereco.
+# Pre-requisito: ConfigMap ace-sonda, gerado de infra/k8s/sonda/pronto.sh.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -38,6 +39,11 @@ spec:
                 secretKeyRef:
                   name: mq-credenciais
                   key: app
+            # o IP ATUAL do pod (muda a cada recriacao): Downward API
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           ports:
             - containerPort: 7600
             - containerPort: 7800
@@ -47,9 +53,18 @@ spec:
               cpu: 250m
             limits:
               memory: 768Mi
-          # v1: confere o PROCESSO (a API de administracao), nao a leitura da fila (limitacao do P5-3b)
+          # ADR 001: pronto = handle de leitura na APP.IN vindo deste pod. Readiness, nunca liveness.
           readinessProbe:
-            tcpSocket:
-              port: 7600
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            exec:
+              command: ["/bin/bash", "/sonda/pronto.sh"]
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 2
+          volumeMounts:
+            - name: sonda
+              mountPath: /sonda
+      volumes:
+        - name: sonda
+          configMap:
+            name: ace-sonda

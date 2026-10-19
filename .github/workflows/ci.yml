@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: shellcheck (falha so em erros)
-        run: shellcheck -S error scripts/*.sh ace/docker/*.sh
+        run: shellcheck -S error scripts/*.sh ace/docker/*.sh infra/k8s/sonda/*.sh
 
   mq:
     name: IBM MQ sobe do zero com a configuracao do repositorio

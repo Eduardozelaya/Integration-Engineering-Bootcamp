@@ -3,5 +3,13 @@
 * +passall +setall: o ACE grava com o contexto da mensagem original e desvia para
 * backout/DEADQ preservando o contexto (erro 5 de 18/09; exp R3a; drift de 05/10).
 * NOTA: Projeto 11 substitui isto por permissoes por fila (menor privilegio).
-SET AUTHREC OBJTYPE(QMGR) PRINCIPAL('app') AUTHADD(CONNECT, INQ, SETALL)
-SET AUTHREC PROFILE('APP.**') OBJTYPE(QUEUE) PRINCIPAL('app') AUTHADD(GET, PUT, INQ, BROWSE, PASSALL, SETALL)
+SET AUTHREC OBJTYPE(QMGR) PRINCIPAL('app') AUTHADD(CONNECT, INQ, SETALL, DSP)
+SET AUTHREC PROFILE('APP.**') OBJTYPE(QUEUE) PRINCIPAL('app') AUTHADD(GET, BROWSE, PUT, INQ, PASSALL, SETALL)
+*
+* Sonda de prontidao do ACE (ADR 001): consultar se o pod tem handle de leitura na APP.IN.
+* Cadeia medida em 14/10: PUT na fila de comandos; GET/BROWSE/INQ no modelo de resposta; DSP na APP.IN e no QM.
+* ATENCAO: o OAM usa o perfil MAIS ESPECIFICO, sem somar. O perfil 'APP.IN' substitui 'APP.**' para a APP.IN,
+* entao repete TODAS as permissoes do generico, mais DSP. So DSP aqui tiraria o GET do ACE no proximo reinicio.
+SET AUTHREC PROFILE('APP.IN') OBJTYPE(QUEUE) PRINCIPAL('app') AUTHADD(GET, BROWSE, PUT, INQ, PASSALL, SETALL, DSP)
+SET AUTHREC PROFILE('SYSTEM.ADMIN.COMMAND.QUEUE') OBJTYPE(QUEUE) PRINCIPAL('app') AUTHADD(PUT)
+SET AUTHREC PROFILE('SYSTEM.MQSC.REPLY.QUEUE') OBJTYPE(QUEUE) PRINCIPAL('app') AUTHADD(GET, BROWSE, INQ)
