@@ -13,6 +13,7 @@ Nenhum segredo aqui: sem senhas, sem chaves, sem o número da conta e sem e-mail
 | chaves de acesso de longa duração | **nenhuma** |
 | linha de comando | `aws login --remote` (AWS CLI 2.38.5): credenciais temporárias, renovadas sozinhas; `aws logout` ao fim |
 | região de trabalho | `us-east-2` (Ohio) |
+| estado do Terraform | bucket S3 `integration-lab-tfstate-…` (versionado, privado, cifrado, trava nativa); `infra/aws` e o próprio `bootstrap` migrados; nenhum estado local |
 | alerta de gastos | **orçamento `lab-gasto-zero-sns` pelo Terraform (`infra/aws`)**, avisando por tópico SNS com e-mail confirmado; o do console ficou com o e-mail Inactive (SCP nos contatos de notificação) |
 | proteção atual | custos só nos créditos; avisos do plano em 50%, 25% e 10% dos créditos |
 
