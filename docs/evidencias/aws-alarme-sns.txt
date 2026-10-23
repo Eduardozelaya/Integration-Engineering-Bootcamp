@@ -1,0 +1,14 @@
+# Alarme de custo da conta AWS como codigo (infra/aws) | 2026-10-22T22:35:05-03:00
+# Credenciais: aws login (temporarias, papel AccountFullAccessRole). Nenhuma chave fixa.
+===== terraform apply
+aws_sns_topic.alertas, aws_sns_topic_subscription.email, aws_sns_topic_policy.alertas, aws_budgets_budget.gasto_zero
+Apply complete! Resources: 4 added, 0 changed, 0 destroyed. Nenhum explicit deny da SCP.
+===== inscricao do e-mail
+email	arn:aws:sns:us-east-2:<conta>:lab-alertas-custo:fcee4f31-ae1c-4121-b3ad-e1a649216477
+===== orcamento
+lab-gasto-zero-sns	1.0	MONTHLY	False
+# ===== ANALISE
+# O orcamento avisa pelo topico SNS: os contatos de e-mail do Budgets sao negados pela SCP (19/10).
+# IncludeCredit False: mede o uso ANTES dos creditos (no plano gratuito, o liquido e sempre zero).
+# A politica do topico libera so o budgets.amazonaws.com, e so em nome desta conta (aws:SourceAccount).
+# Teste de ponta a ponta: publicacao manual no topico chegou ao e-mail.
