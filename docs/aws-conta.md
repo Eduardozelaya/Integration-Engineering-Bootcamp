@@ -27,3 +27,14 @@ Nenhum segredo aqui: sem senhas, sem chaves, sem o número da conta e sem e-mail
 Alerta do orçamento por tópico SNS, criado pelo Terraform (contorna a SCP dos contatos de notificação).
 
 Regras: o que importa vive no git; a conta é descartável. Não clicar em "Atualizar" o plano.
+
+## ECR e lições de 22 a 26/10
+- Repositório `integration-lab/wiremock` (Terraform, `infra/aws/ecr.tf`): tags imutáveis, varredura ao enviar,
+  AES256, regra de ciclo de vida (3 imagens; sem tag apagada em 1 dia). Imagem: WireMock 3.13.2 (Apache 2.0).
+- **Ler o resumo do `plan`:** com o e-mail de exemplo, o plano propôs destruir a inscrição confirmada
+  (`1 to destroy`). A variável `email_alerta` ganhou validação; o e-mail fica fora do git (variável de ambiente).
+- **Notebook provisório:** o cofre de credenciais do Windows (Docker Desktop) recusou o token do ECR
+  (`The stub received bad data`). O push passa para o notebook principal (Docker Engine no WSL).
+- **`aws login` depois de dias parado:** "Continue with an active session" ofereceu uma sessão antiga, e a troca
+  do código falhou com `TOKEN_EXPIRED`. Correção: entrar de novo no console primeiro, e só então o `aws login`.
+- Créditos: US$ 120 em 26/10 (US$ 20 a mais por uma atividade de introdução da AWS).

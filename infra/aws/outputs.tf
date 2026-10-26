@@ -4,3 +4,6 @@ output "topico" {
 output "orcamento" {
   value = aws_budgets_budget.gasto_zero.name
 }
+output "ecr_wiremock" {
+  value = aws_ecr_repository.wiremock.name
+}

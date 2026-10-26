@@ -1,0 +1,15 @@
+# ECR do lab (infra/aws/ecr.tf) | 2026-10-26T09:47:27-03:00
+===== repositorio
+integration-lab/wiremock	IMMUTABLE	True	AES256
+===== regra de ciclo de vida
+{"rulePriority":1,"description":"imagens sem tag: apagar depois de 1 dia"}
+{"rulePriority":2,"description":"manter so as 3 imagens mais recentes"}
+# ===== ANALISE
+# terraform apply: 2 added (repositorio + regra), 0 destroy; o alarme e o estado intactos.
+# Imagem escolhida: WireMock (Apache 2.0). ACE nao pode ser redistribuido (ADR 002); MQ dev tem licenca propria.
+# Versao real 3.13.2 (wiremock --version); a etiqueta org.opencontainers.image.version diz 26.04 (herdada da base).
+# docker login FALHOU no notebook provisorio: 'The stub received bad data' (cofre de credenciais do Windows,
+#   usado pelo Docker Desktop, recusa o token longo do ECR); push: 'no basic auth credentials'.
+# Proximo: o push a partir do notebook principal (Docker Engine no WSL, sem o cofre do Windows).
+# Plano com o e-mail de exemplo propos '3 to add, 1 to destroy' (a inscricao confirmada): nao aplicado;
+#   a variavel email_alerta ganhou validacao (formato e valores de exemplo).
