@@ -21,7 +21,7 @@ services:
       start_period: 20s
 
   mock:
-    image: wiremock/wiremock:latest
+    image: wiremock/wiremock:3.13.2@sha256:0d4ecb3e4dc8213fd7a4d37d6a78f6e6b553a6d2e15bd51b0999781282ac61b3   # fixado em 26/10 (era latest); indice multiplataforma do Docker Hub
     container_name: mock
     command: ["--global-response-templating", "--verbose"]
     ports:

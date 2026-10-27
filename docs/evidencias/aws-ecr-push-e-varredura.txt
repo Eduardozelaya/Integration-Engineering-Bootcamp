@@ -1,0 +1,18 @@
+# ECR: push do WireMock e varredura de vulnerabilidades (notebook principal) | 2026-10-26T22:32:08-03:00
+# docker login: Login Succeeded no Docker Engine do WSL (no provisorio, o Docker Desktop recusou: cofre do Windows).
+# push: indice multiplataforma sha256:0d4ecb3e... -> imagem amd64 sha256:d737d2de... (so a plataforma presente).
+===== imagem no ECR
+3.13.2	sha256:d737d2de3664a7e1bf96f73a7bd48a0d47d61988f7ca88a6e51ea44b8c1f687d	127166047
+===== varredura (severidades)
+21	103	27	120	47
+None
+None
+None
+===== criticas (pacote)
+# ===== ANALISE
+# A varredura compara os PACOTES da imagem com CVEs conhecidas (nao procura segredos: isso e o gitleaks).
+# A maioria vem da imagem-base (Ubuntu 26.04: openssl, curl, attr...), montada ~3 meses antes; cada CVE
+#   aparece em pares (pacote-fonte e binario). Fixar a versao congela tambem as vulnerabilidades:
+#   o caminho e fixar E atualizar de proposito (aviso de versao nova).
+# Custo: ~127 MB comprimidos ~ US$ 0,01/mes: o alarme de gasto zero deve disparar no fim de novembro.
+# Compose: WireMock fixado em 3.13.2@sha256:0d4ecb3e... (era latest; mesma versao nas duas maquinas por coincidencia).
