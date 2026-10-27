@@ -9,7 +9,7 @@ jobs:
     name: shellcheck
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: shellcheck (falha so em erros)
         run: shellcheck -S error scripts/*.sh ace/docker/*.sh infra/k8s/sonda/*.sh
 
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Gerar senhas descartaveis
         run: |
@@ -76,7 +76,7 @@ jobs:
     name: gitleaks (historico inteiro)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: gitleaks
@@ -87,7 +87,7 @@ jobs:
     name: codigo ACE validado sem o produto (ADR 002)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: xmllint
         run: command -v xmllint || (sudo apt-get update -qq && sudo apt-get install -y -qq libxml2-utils)
       - name: XML, referencias ESQL e overrides do container
@@ -99,7 +99,7 @@ jobs:
     env:
       TRIVY: aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: criticas com correcao, fora do .trivyignore (reprova)
         run: |
           falhas=0
