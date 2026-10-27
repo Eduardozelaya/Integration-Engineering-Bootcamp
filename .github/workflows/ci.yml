@@ -92,3 +92,31 @@ jobs:
         run: command -v xmllint || (sudo apt-get update -qq && sudo apt-get install -y -qq libxml2-utils)
       - name: XML, referencias ESQL e overrides do container
         run: ./scripts/valida-ace.sh
+
+  imagens-terceiros:
+    name: imagens de terceiros sem critica nova (ADR 003)
+    runs-on: ubuntu-24.04
+    env:
+      TRIVY: aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
+    steps:
+      - uses: actions/checkout@v5
+      - name: criticas com correcao, fora do .trivyignore (reprova)
+        run: |
+          falhas=0
+          for IMG in $(grep -oE 'image: [^ #]+' docker-compose.yml | awk '{print $2}' | grep -v '^integration-lab/'); do
+            echo "== ${IMG%%@*}"
+            if docker run --rm -v "$PWD:/repo" "$TRIVY" image --quiet --severity CRITICAL --ignore-unfixed \
+                 --exit-code 1 --ignorefile /repo/.trivyignore "$IMG"; then
+              echo "ok"
+            else
+              echo "REPROVADA"; falhas=$((falhas + 1))
+            fi
+          done
+          test "$falhas" -eq 0
+      - name: altas com correcao (so relato)
+        run: |
+          for IMG in $(grep -oE 'image: [^ #]+' docker-compose.yml | awk '{print $2}' | grep -v '^integration-lab/'); do
+            N=$(docker run --rm "$TRIVY" image --quiet --severity HIGH --ignore-unfixed --format json "$IMG" \
+                | jq '[.Results[]?.Vulnerabilities[]?] | length')
+            echo "${IMG%%@*}: $N altas com correcao"
+          done

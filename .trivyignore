@@ -1,0 +1,5 @@
+# Vulnerabilidades ACEITAS, com prazo (ADR 003). Revisar ate a data de cada linha.
+# Imagem do MQ de desenvolvedor (IBM, Red Hat 10.2), fixada por digest: 7 criticas com correcao
+# publicada pela distribuicao, mas so resolvidas quando a IBM publicar uma imagem nova.
+# Contexto: laboratorio, imagem de desenvolvedor, sem exposicao externa nem dados reais.
+CVE-2026-8763 exp:2026-12-31

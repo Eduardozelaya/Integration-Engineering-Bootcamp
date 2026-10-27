@@ -1,0 +1,23 @@
+# ADR 003: avisos semanais de versao nova; cada atualizacao vira um PR, validado pelo CI e aceito de proposito.
+version: 2
+updates:
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "integration-lab/ace"   # imagem local, gerada do commit (nao ha registro publico)
+  - package-ecosystem: "docker"
+    directory: "/infra/k8s"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "integration-lab/ace"
+  - package-ecosystem: "docker"
+    directory: "/ace/docker"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
