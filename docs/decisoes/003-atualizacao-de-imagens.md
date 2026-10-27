@@ -54,3 +54,13 @@ dentro do `echo`, e não o do Trivy: corrigida guardando o código logo após o 
   e não distingue. Próximo: `ubuntu:26.04` (LTS) fixada por digest, e o Dependabot ignorando as intermediárias.
 - **Regra acrescentada:** PR do Dependabot que mexe no Dockerfile do ACE só é aceito depois de
   `build-ace-image.sh` + teste final local. Para o resto, o CI verde basta.
+
+## Base do ACE: Ubuntu 26.04 LTS por digest (27/10)
+- `FROM ubuntu:26.04@sha256:19fcd1bf...` (Ubuntu 26.04.1 LTS). O Dependabot passa a ignorar saltos de versao
+  do Ubuntu (major e minor) no `ace/docker`: propoe so digests novos da 26.04 (as correcoes). Trocar de LTS e
+  decisao humana, com build + teste final local.
+- Prova: build ok, BIP1991I sem erro de biblioteca, `Ubuntu 26.04.1 LTS` dentro do container, teste final 16 = 9/9.
+- Tropeco: um comentario na mesma linha do `FROM` quebrou o build ("FROM requires either one or three
+  arguments"); o bloco nao parou, o compose religou o container antigo (25.10) e o teste passou sobre a base
+  errada. Pego pela conferencia do `/etc/os-release`. A execucao 15 foi descartada. Desde entao, o teste so roda
+  com travas: codigo do build pelo PIPESTATUS, `--force-recreate`, e o sistema do container conferido antes.

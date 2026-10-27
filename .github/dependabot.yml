@@ -17,6 +17,12 @@ updates:
     directory: "/ace/docker"
     schedule:
       interval: "weekly"
+    ignore:
+      # Base do ACE: so correcoes da mesma versao (digest novo). Saltos de versao (25.10, 26.10...) nao:
+      # o Dependabot escolhe a maior versao e nao distingue LTS de intermediaria (PR #1, 26/10).
+      # Trocar de LTS (26.04 -> 28.04) e decisao humana, com build + teste final local.
+      - dependency-name: "ubuntu"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
