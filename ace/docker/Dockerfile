@@ -4,7 +4,7 @@
 # Construida por scripts/build-ace-image.sh, que aponta os contextos nomeados:
 #   acesrc   -> instalacao do ACE fora do git (~/ace/ace-12.0.12.27)
 #   mqclient -> cliente MQ redistribuivel fora do git (~/mqclient)
-FROM ubuntu:22.04
+FROM ubuntu:25.10
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates \
