@@ -4,11 +4,18 @@
 ===== imagem no ECR
 3.13.2	sha256:d737d2de3664a7e1bf96f73a7bd48a0d47d61988f7ca88a6e51ea44b8c1f687d	127166047
 ===== varredura (severidades)
-21	103	27	120	47
-None
-None
-None
-===== criticas (pacote)
+===== criticas por pacote
+      3 perl-base
+      3 perl
+      3 libcurl4t64
+      3 curl
+      2 openssl
+      2 libssl3t64
+      1 libc-bin
+      1 libc6
+      1 libbrotli1
+      1 glibc
+      1 brotli
 # ===== ANALISE
 # A varredura compara os PACOTES da imagem com CVEs conhecidas (nao procura segredos: isso e o gitleaks).
 # A maioria vem da imagem-base (Ubuntu 26.04: openssl, curl, attr...), montada ~3 meses antes; cada CVE
