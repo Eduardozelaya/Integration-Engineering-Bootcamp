@@ -4,6 +4,12 @@
 ===== imagem no ECR
 3.13.2	sha256:d737d2de3664a7e1bf96f73a7bd48a0d47d61988f7ca88a6e51ea44b8c1f687d	127166047
 ===== varredura (severidades)
+CRITICAL	21
+HIGH	103
+MEDIUM	120
+LOW	27
+UNDEFINED	47
+(total 318; contagem copiada da saida da varredura de 26/10 22:28)
 ===== criticas por pacote
       3 perl-base
       3 perl
