@@ -44,3 +44,13 @@ dentro do `echo`, e não o do Trivy: corrigida guardando o código logo após o 
 - O MQ é referenciado só pelo digest, sem tag: o Dependabot não consegue comparar versões dele. Próximo passo:
   usar `imagem:tag@digest`, como já é o caso do WireMock.
 - O Trivy baixa o banco de vulnerabilidades a cada execução do CI: o job depende da disponibilidade dele.
+
+## Primeiros PRs do Dependabot (26/10)
+- **checkout v5 → v7** (PR #2): o CI rodou os 5 jobs com a v7 antes do merge. Coberto pelo CI.
+- **Ubuntu 22.04 → 25.10 no Dockerfile do ACE** (PR #1): aceito **sem** teste local; o CI público não constrói
+  a imagem do ACE (ADR 002), então o verde do PR não dizia nada sobre ela. Testado depois do merge: build ok,
+  ACE inicia, teste final 14 = 9/9 (~144 s).
+- **Mas 25.10 é uma versão intermediária** (suporte de ~9 meses), não LTS: o Dependabot escolhe a maior versão
+  e não distingue. Próximo: `ubuntu:26.04` (LTS) fixada por digest, e o Dependabot ignorando as intermediárias.
+- **Regra acrescentada:** PR do Dependabot que mexe no Dockerfile do ACE só é aceito depois de
+  `build-ace-image.sh` + teste final local. Para o resto, o CI verde basta.
