@@ -1,0 +1,18 @@
+# O misterio do kind load explicado (notebook principal) | 2026-10-27T21:42:21-03:00
+# Provisorio (19/10): Docker Desktop 24, /tmp tmpfs 3,4 GB -> 'no space left on device'.
+# Principal (12/10 e hoje): Docker Engine 29, /tmp tmpfs 2,0 GB -> funciona. Por que?
+===== a imagem
+local (descompactada): 5792072947 bytes | no no do kind: 1.59GB (compactada)
+===== o vigia do /tmp durante o kind load (a cada 3 s)
+21:29:10  /tmp usado: 0  21:29:13  /tmp usado: 74M  /tmp/images-tar1417197724
+21:29:16  /tmp usado: 160M  /tmp/images-tar1417197724
+21:29:58  /tmp usado: 1.5G  /tmp/images-tar1417197724
+21:31:29  /tmp usado: 1.5G  /tmp/images-tar1417197724
+real 2m19s; ID no no: 8b04810917d08 (base 22.04) -> b3a00dee2b685 (base 26.04)
+# ===== ANALISE
+# O kind load grava no /tmp (pasta images-tar*) o arquivo do 'docker save'. O formato depende do Docker:
+#   Engine 29 exporta as camadas compactadas (~1,5 GB, cabe em 2 GB);
+#   Desktop 24 exportava as camadas abertas (~3,6 GB, estourou 3,4 GB).
+# O que fazia diferenca nao era o tamanho do /tmp, e sim o tamanho do arquivo que vai para ele.
+# Previsao: estoura (errado: o arquivo era compactado); 3 min (perto: 2m19s); pod na 26.04 (certo).
+# Depois: rollout restart -> IPPROCS 2 em +16 s, 1/1 em +21 s; Ubuntu 26.04.1 LTS no pod; teste final 17 = 9/9.

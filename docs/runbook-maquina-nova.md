@@ -101,7 +101,7 @@ Recriado do zero até o MQ saudável, sem nenhum arquivo copiado do lab original
   `infra/kind/cluster-cgroupv1.yaml` (`kubeadmConfigPatches` com `failCgroupV1: false`); cluster em 39 s,
   `failCgroupV1: false` conferido em `/var/lib/kubelet/config.yaml`; MQ e ACE sem reinícios depois da carga.
   Evidência: `docs/evidencias/teste-final/maquina-nova-2-k8s.txt`.
-- **`/tmp` do Debian 13 é `tmpfs` (RAM, 3,4 GB aqui):** o `kind load` do ACE (~3,6 GB) estourou com
+- **`/tmp` do Debian 13 é `tmpfs` (RAM, 3,4 GB aqui; explicado em 27/10: o Docker Desktop 24 exporta a imagem descompactada, ~3,6 GB; o Docker Engine 29 do principal exporta compactada, ~1,5 GB, e cabe no `/tmp` de 2 GB):** o `kind load` do ACE (~3,6 GB) estourou com
   `no space left on device`. Solução: `export TMPDIR=$LAB/tmp` (no disco). O `kind load` levou 12 min
   com o Docker Desktop.
 - **Intervalo entre "Available" e a leitura da fila:** nesta máquina, o ACE ficou `Available` (sonda de
