@@ -37,6 +37,7 @@ Conferir: `docker ps` com `qm1 (healthy)`.
 ./scripts/build-ace-image.sh                 # ~5-10 min; imagem de ~1,6 GB comprimida
 docker compose --profile ace up -d ace
 ./scripts/teste-final.sh 12   # um número LIVRE: o script sobrescreve execucao-N
+# Para testar uma imagem NOVA do ACE (base trocada, PR do Dependabot): ./scripts/testa-imagem-ace.sh <N>
 ```
 Critério: **9/9 PASSOU, ~144 s** (o limite de 1 tps do modo developer).
 

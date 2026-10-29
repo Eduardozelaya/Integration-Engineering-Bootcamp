@@ -64,3 +64,9 @@ dentro do `echo`, e não o do Trivy: corrigida guardando o código logo após o 
   arguments"); o bloco nao parou, o compose religou o container antigo (25.10) e o teste passou sobre a base
   errada. Pego pela conferencia do `/etc/os-release`. A execucao 15 foi descartada. Desde entao, o teste so roda
   com travas: codigo do build pelo PIPESTATUS, `--force-recreate`, e o sistema do container conferido antes.
+
+## As travas viraram script (28/10)
+`scripts/testa-imagem-ace.sh <N>`: recusa um numero de execucao ja usado; le a base esperada do Dockerfile;
+constroi a imagem sem pipe (o `set -e` ve a falha do build direto); recria o container; confere o
+`/etc/os-release` antes do teste final. Calibrado: sem argumento, recibo 1 com a mensagem de uso; com o 16
+(ja existe), "PARADO" e recibo 1. E o caminho para testar um PR do Dependabot no Dockerfile do ACE.
