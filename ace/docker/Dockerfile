@@ -5,7 +5,7 @@
 #   acesrc   -> instalacao do ACE fora do git (~/ace/ace-12.0.12.27)
 #   mqclient -> cliente MQ redistribuivel fora do git (~/mqclient)
 # Base: LTS fixada por digest (ADR 003); o Dependabot propoe so digests novos da 26.04.
-FROM ubuntu:26.04@sha256:19fcd1bf268f02b60aca3bd30bd8a6d9a11759a430e32921833e65f16d87348a
+FROM ubuntu:26.04@sha256:6a06111c3b0a8600feadb270aec771dc239bf407b25625f93f44ab00e11f4d3c
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates \
