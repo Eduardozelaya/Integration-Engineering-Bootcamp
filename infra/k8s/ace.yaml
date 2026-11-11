@@ -24,6 +24,10 @@ spec:
       labels:
         app: ace
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
       containers:
         - name: ace
           image: integration-lab/ace:12.0.12.27-dev
