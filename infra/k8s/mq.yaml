@@ -31,6 +31,9 @@ spec:
       labels:
         app: mq
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
       containers:
         - name: mq
           image: icr.io/ibm-messaging/mq@sha256:2cb02e7991ac9fc44d10ba4e353abdc1402ec1667243b74a4574df5f274d7907
